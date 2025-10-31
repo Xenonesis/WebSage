@@ -13,10 +13,10 @@ class WebSagePopup {
 
   async loadSettings() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['webSageSettings'], (result) => {
+      chrome.storage.local.get(['webSageSettings', 'googleApiKeys'], (result) => {
         this.settings = result.webSageSettings || {
-          provider: 'openai',
-          model: 'gpt-4o',
+          provider: 'gemini',
+          model: 'gemini-2.0-flash-exp',
           contextEnabled: true,
           memoryEnabled: true,
           contextMode: 'intelligent',
@@ -26,7 +26,18 @@ class WebSagePopup {
           sentimentAnalysis: true,
           intentClassification: true,
           conversationInsights: true,
+          animationsEnabled: true,
+          notificationsEnabled: true,
           apiKeys: {}
+        };
+        this.googleApiKeys = result.googleApiKeys || {
+          gemini: '',
+          cloudTranslation: '',
+          naturalLanguage: '',
+          factCheck: '',
+          customSearch: '',
+          customSearchEngineId: '',
+          safeBrowsing: ''
         };
         resolve();
       });
@@ -48,9 +59,27 @@ class WebSagePopup {
     document.getElementById('intentClassification').checked = this.settings.intentClassification;
     document.getElementById('conversationInsights').checked = this.settings.conversationInsights;
     
-    // Set API key for current provider
-    const apiKey = this.settings.apiKeys[this.settings.provider] || '';
-    document.getElementById('apiKey').value = apiKey;
+    // Set animations and notifications
+    if (document.getElementById('animationsEnabled')) {
+      document.getElementById('animationsEnabled').checked = this.settings.animationsEnabled;
+    }
+    if (document.getElementById('notificationsEnabled')) {
+      document.getElementById('notificationsEnabled').checked = this.settings.notificationsEnabled;
+    }
+    
+    // Set Google API keys
+    if (document.getElementById('geminiKey')) {
+      document.getElementById('geminiKey').value = this.googleApiKeys.gemini || '';
+    }
+    if (document.getElementById('cloudNlpKey')) {
+      document.getElementById('cloudNlpKey').value = this.googleApiKeys.naturalLanguage || '';
+    }
+    if (document.getElementById('customSearchKey')) {
+      document.getElementById('customSearchKey').value = this.googleApiKeys.customSearch || '';
+    }
+    if (document.getElementById('searchEngineId')) {
+      document.getElementById('searchEngineId').value = this.googleApiKeys.customSearchEngineId || '';
+    }
     
     // Update model options based on provider
     this.updateModelOptions();
@@ -61,21 +90,6 @@ class WebSagePopup {
     document.getElementById('provider').addEventListener('change', (e) => {
       this.settings.provider = e.target.value;
       this.updateModelOptions();
-      this.updateApiKeyField();
-    });
-
-    // API key toggle visibility
-    document.getElementById('toggleApiKey').addEventListener('click', () => {
-      const apiKeyInput = document.getElementById('apiKey');
-      const toggleBtn = document.getElementById('toggleApiKey');
-      
-      if (apiKeyInput.type === 'password') {
-        apiKeyInput.type = 'text';
-        toggleBtn.textContent = '🙈';
-      } else {
-        apiKeyInput.type = 'password';
-        toggleBtn.textContent = '👁️';
-      }
     });
 
     // Save settings
@@ -87,6 +101,21 @@ class WebSagePopup {
     document.getElementById('testConnection').addEventListener('click', () => {
       this.testConnection();
     });
+    
+    // Quick actions
+    if (document.getElementById('quickTest')) {
+      document.getElementById('quickTest').addEventListener('click', () => {
+        this.testConnection();
+      });
+    }
+    
+    if (document.getElementById('quickReset')) {
+      document.getElementById('quickReset').addEventListener('click', () => {
+        if (confirm('Reset all settings to defaults?')) {
+          this.resetSettings();
+        }
+      });
+    }
   }
 
   updateModelOptions() {
@@ -108,8 +137,8 @@ class WebSagePopup {
         break;
       case 'gemini':
         models = [
-          { value: 'gemini-2.0-flash-exp', text: 'Gemini 2.0 Flash (Best)' },
-          { value: 'gemini-1.5-pro', text: 'Gemini 1.5 Pro' },
+          { value: 'gemini-2.0-flash-exp', text: 'Gemini 2.0 Flash Exp ⚡ (Fastest)' },
+          { value: 'gemini-1.5-pro', text: 'Gemini 1.5 Pro 💎 (Best Quality)' },
           { value: 'gemini-1.5-flash', text: 'Gemini 1.5 Flash' },
           { value: 'gemini-1.0-pro', text: 'Gemini 1.0 Pro' }
         ];
@@ -135,10 +164,6 @@ class WebSagePopup {
     modelSelect.value = this.settings.model || models[0].value;
   }
 
-  updateApiKeyField() {
-    const apiKey = this.settings.apiKeys[this.settings.provider] || '';
-    document.getElementById('apiKey').value = apiKey;
-  }
 
   async saveSettings() {
     // Collect form data
@@ -156,30 +181,66 @@ class WebSagePopup {
     this.settings.intentClassification = document.getElementById('intentClassification').checked;
     this.settings.conversationInsights = document.getElementById('conversationInsights').checked;
     
-    // Save API key for current provider
-    const apiKey = document.getElementById('apiKey').value.trim();
-    if (apiKey) {
-      this.settings.apiKeys[this.settings.provider] = apiKey;
+    // Collect animations and notifications
+    if (document.getElementById('animationsEnabled')) {
+      this.settings.animationsEnabled = document.getElementById('animationsEnabled').checked;
+    }
+    if (document.getElementById('notificationsEnabled')) {
+      this.settings.notificationsEnabled = document.getElementById('notificationsEnabled').checked;
+    }
+    
+    // Collect Google API keys
+    if (document.getElementById('geminiKey')) {
+      const geminiKey = document.getElementById('geminiKey').value.trim();
+      if (geminiKey) {
+        this.googleApiKeys.gemini = geminiKey;
+        this.settings.apiKeys.gemini = geminiKey; // Also save to old format for compatibility
+      }
+    }
+    
+    if (document.getElementById('cloudNlpKey')) {
+      const nlpKey = document.getElementById('cloudNlpKey').value.trim();
+      if (nlpKey) this.googleApiKeys.naturalLanguage = nlpKey;
+    }
+    
+    if (document.getElementById('customSearchKey')) {
+      const searchKey = document.getElementById('customSearchKey').value.trim();
+      if (searchKey) this.googleApiKeys.customSearch = searchKey;
+    }
+    
+    if (document.getElementById('searchEngineId')) {
+      const engineId = document.getElementById('searchEngineId').value.trim();
+      if (engineId) this.googleApiKeys.customSearchEngineId = engineId;
     }
 
     try {
-      await chrome.storage.local.set({ webSageSettings: this.settings });
-      this.showStatus('Settings saved successfully!', 'success');
+      await chrome.storage.local.set({ 
+        webSageSettings: this.settings,
+        googleApiKeys: this.googleApiKeys
+      });
+      this.showStatus('Settings saved successfully! 🎉', 'success');
     } catch (error) {
       this.showStatus('Failed to save settings: ' + error.message, 'error');
     }
   }
 
   async testConnection() {
-    const apiKey = document.getElementById('apiKey').value.trim();
     const provider = this.settings.provider;
+    let apiKey = '';
+    
+    // Get API key based on provider
+    if (provider === 'gemini' && document.getElementById('geminiKey')) {
+      apiKey = document.getElementById('geminiKey').value.trim();
+    } else {
+      apiKey = this.settings.apiKeys[provider] || '';
+    }
 
     if (!apiKey) {
-      this.showStatus('Please enter an API key first', 'error');
+      this.showStatus('Please enter an API key first ⚠️', 'error');
       return;
     }
 
-    this.showStatus('Testing connection...', 'info');
+    this.showStatus('Testing connection... 🔄', 'info');
 
     try {
       let isValid = false;
@@ -197,12 +258,12 @@ class WebSagePopup {
       }
 
       if (isValid) {
-        this.showStatus('Connection successful!', 'success');
+        this.showStatus('✅ Connection successful! API key is valid.', 'success');
       } else {
-        this.showStatus('Connection failed. Please check your API key.', 'error');
+        this.showStatus('❌ Connection failed. Please check your API key.', 'error');
       }
     } catch (error) {
-      this.showStatus('Connection test failed: ' + error.message, 'error');
+      this.showStatus('❌ Connection test failed: ' + error.message, 'error');
     }
   }
 
@@ -229,6 +290,33 @@ class WebSagePopup {
     return response.ok;
   }
 
+  async resetSettings() {
+    this.settings = {
+      provider: 'gemini',
+      model: 'gemini-2.0-flash-exp',
+      contextEnabled: true,
+      memoryEnabled: true,
+      contextMode: 'intelligent',
+      maxTokens: 1500,
+      theme: 'light',
+      nlpEnabled: true,
+      sentimentAnalysis: true,
+      intentClassification: true,
+      conversationInsights: true,
+      animationsEnabled: true,
+      notificationsEnabled: true,
+      apiKeys: {}
+    };
+    
+    try {
+      await chrome.storage.local.set({ webSageSettings: this.settings });
+      this.setupUI();
+      this.showStatus('Settings reset to defaults! 🔄', 'success');
+    } catch (error) {
+      this.showStatus('Failed to reset settings: ' + error.message, 'error');
+    }
+  }
+
   showStatus(message, type) {
     const statusDiv = document.getElementById('status');
     statusDiv.textContent = message;
@@ -243,6 +331,14 @@ class WebSagePopup {
     }
   }
 }
+
+// Global function for API key visibility toggle
+window.toggleApiKeyVisibility = function(fieldId) {
+  const input = document.getElementById(fieldId);
+  if (input) {
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+};
 
 // Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {

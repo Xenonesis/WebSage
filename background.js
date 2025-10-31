@@ -257,12 +257,14 @@ class WebSageBackground {
   }
 
   initializeExtension() {
-    // Set default settings with enhanced NLP options
-    chrome.storage.local.get(['webSageSettings'], (result) => {
+    console.log('🚀 Initializing WebSage v6.0 - Google Powered Edition');
+    
+    // Set default settings with Google services as primary
+    chrome.storage.local.get(['webSageSettings', 'googleApiKeys'], (result) => {
       if (!result.webSageSettings) {
         const defaultSettings = {
-          provider: 'openai',
-          model: 'gpt-4o',
+          provider: 'gemini',
+          model: 'gemini-2.0-flash-exp',
           contextEnabled: true,
           memoryEnabled: true,
           contextMode: 'intelligent',
@@ -273,11 +275,33 @@ class WebSageBackground {
           entityExtraction: true,
           intentClassification: true,
           conversationInsights: true,
+          animationsEnabled: true,
+          notificationsEnabled: true,
           apiKeys: {}
         };
         chrome.storage.local.set({ webSageSettings: defaultSettings });
+        console.log('✅ Default settings initialized with Google Gemini as primary provider');
+      }
+      
+      // Initialize Google API keys storage if not present
+      if (!result.googleApiKeys) {
+        const defaultGoogleKeys = {
+          gemini: '',
+          cloudTranslation: '',
+          naturalLanguage: '',
+          factCheck: '',
+          customSearch: '',
+          customSearchEngineId: '',
+          safeBrowsing: ''
+        };
+        chrome.storage.local.set({ googleApiKeys: defaultGoogleKeys });
+        console.log('✅ Google API keys storage initialized');
       }
     });
+    
+    // Log installation message
+    console.log('🎉 WebSage v6.0 ready! Powered by 7 Google Cloud APIs');
+    console.log('📚 Visit https://makersuite.google.com/app/apikey to get your Gemini API key');
   }
 }
 

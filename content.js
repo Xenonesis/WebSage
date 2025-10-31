@@ -690,26 +690,46 @@ if (window.webSageLoaded) {
         'li' // List items
       ];
 
+      const blacklist = ['nav','header','footer','aside'];
+      const blacklistClasses = /(nav|menu|footer|header|sidebar|advert|ads|ad\b|sponsor|cookie|banner)/i;
+      const seen = new Set();
       const keyElements = [];
+
+      const isBlacklisted = (el) => {
+        let node = el;
+        while (node && node !== document.body) {
+          const tag = node.tagName?.toLowerCase() || '';
+          if (blacklist.includes(tag)) return true;
+          const cls = (node.className || '').toString();
+          const id = (node.id || '').toString();
+          if (blacklistClasses.test(cls) || blacklistClasses.test(id)) return true;
+          node = node.parentElement;
+        }
+        return false;
+      };
 
       selectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(el => {
+          if (isBlacklisted(el)) return;
           const text = el.innerText?.trim();
-          if (text && text.length > 20 && text.length < 500) {
-            keyElements.push({
-              type: el.tagName.toLowerCase(),
-              text: text,
-              importance: this.calculateImportance(el)
-            });
-          }
+          if (!text || text.length < 40) return;
+          if (text.length > 800) return;
+          const normalized = text.replace(/\s+/g,' ').trim();
+          if (seen.has(normalized)) return;
+          seen.add(normalized);
+          keyElements.push({
+            type: el.tagName.toLowerCase(),
+            text: normalized,
+            importance: this.calculateImportance(el)
+          });
         });
       });
 
       // Sort by importance and return top content
       return keyElements
         .sort((a, b) => b.importance - a.importance)
-        .slice(0, 15)
+        .slice(0, 20)
         .map(el => el.text);
     }
 
@@ -846,6 +866,8 @@ if (window.webSageLoaded) {
       this.intelligentContext = new IntelligentContextProcessor();
       // Initialize NLP processor - should be available since it's loaded as content script
       this.nlpProcessor = null;
+      // Initialize Google Services Manager
+      this.googleServices = null;
       this.conversationInsights = {
         userPreferences: {},
         commonQuestions: [],
@@ -880,6 +902,7 @@ if (window.webSageLoaded) {
       this.createChatWindow();
       this.setupGlobalToggle();
       this.initializeNLPProcessor();
+      await this.initializeGoogleServices();
       this.createFloatingActionButton();
       this.setupKeyboardShortcuts();
       this.setupNotificationSystem();
@@ -900,6 +923,52 @@ if (window.webSageLoaded) {
         console.error('❌ Failed to initialize embedded NLP processor:', error);
         this.nlpProcessor = null;
       }
+    }
+
+    // Initialize Google Services Manager
+    async initializeGoogleServices() {
+      try {
+        console.log('🚀 Initializing Google Services Manager...');
+        
+        // Load Google services script dynamically
+        if (!window.GoogleServicesManager) {
+          await this.loadGoogleServicesScript();
+        }
+        
+        if (window.GoogleServicesManager) {
+          this.googleServices = new window.GoogleServicesManager();
+          await this.googleServices.initialize();
+          console.log('✅ Google Services Manager initialized successfully');
+          console.log('🌐 Available services: Gemini, Translation, NLP, Fact Check, Custom Search, Safe Browsing');
+        } else {
+          console.warn('⚠️ Google Services Manager not available - will use basic features only');
+        }
+      } catch (error) {
+        console.error('❌ Failed to initialize Google Services:', error);
+        this.googleServices = null;
+      }
+    }
+
+    // Load Google services script
+    async loadGoogleServicesScript() {
+      return new Promise((resolve, reject) => {
+        try {
+          const script = document.createElement('script');
+          script.src = chrome.runtime.getURL('google-services.js');
+          script.onload = () => {
+            console.log('📄 Google services script loaded');
+            resolve();
+          };
+          script.onerror = (error) => {
+            console.error('Failed to load google-services.js:', error);
+            reject(error);
+          };
+          document.head.appendChild(script);
+        } catch (error) {
+          console.error('Error loading Google services script:', error);
+          reject(error);
+        }
+      });
     }
 
     async loadSettings() {
@@ -929,8 +998,8 @@ if (window.webSageLoaded) {
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       
       return {
-        provider: 'openai',
-        model: 'gpt-4o',
+        provider: 'gemini',
+        model: 'gemini-2.0-flash-exp',
         contextEnabled: true,
         memoryEnabled: true,
         contextMode: 'intelligent',
@@ -1927,7 +1996,7 @@ if (window.webSageLoaded) {
           enhancedMessage = this.nlpProcessor.generateContextualPrompt(message, context);
         }
 
-        const response = await this.callAI(enhancedMessage, context);
+        const response = await this.generateAccurateResponse(enhancedMessage, context);
         const totalTime = performance.now() - startTime;
 
         // Update NLP context with AI response if available
@@ -2385,7 +2454,98 @@ if (window.webSageLoaded) {
       return Math.abs(hash).toString();
     }
 
-    async callAI(message, context) {
+    // Accuracy pipeline: generate → verify → (optional) refine
+    async generateAccurateResponse(message, context) {
+      // First-pass answer
+      const draft = await this.callAI(message, context, { temperature: 0.2 });
+
+      // Verify grounding against context (if any)
+      if (!context || context.trim().length === 0) return draft;
+
+      try {
+        const verdict = await this.verifyAnswer(draft, context);
+        if (verdict && verdict.verdict === 'HIGH') return draft;
+
+        // Refine if low confidence or unsupported claims detected
+        const refined = await this.callAI(
+          `Using ONLY the information in the page context, rewrite your answer more conservatively. Remove anything not explicitly supported. Prefer short quotes from the context as evidence.\n\nUser request: ${message}\n\nYour prior answer (for reference): ${draft}`,
+          context,
+          { temperature: 0.1 }
+        );
+
+        return refined || draft;
+      } catch (_) {
+        return draft;
+      }
+    }
+
+    async verifyAnswer(answer, context) {
+      const provider = this.settings.provider;
+      const apiKey = this.settings.apiKeys[provider];
+      const model = this.settings.model;
+
+      const verifierInstruction = `You are a strict verifier. Compare the assistant's answer to the provided PAGE CONTEXT. Return STRICT JSON with fields: {"verdict":"HIGH"|"LOW","reasons":string[],"unsupported_claims":string[]}. "HIGH" only if every substantive claim is directly supported by the context. Do not include any extra text.`;
+      const verificationPrompt = `PAGE CONTEXT:\n${context}\n\nASSISTANT ANSWER:\n${answer}\n\nReturn only JSON.`;
+
+      try {
+        if (provider === 'openai') {
+          const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: model || 'gpt-4o',
+              messages: [
+                { role: 'system', content: verifierInstruction },
+                { role: 'user', content: verificationPrompt }
+              ],
+              max_tokens: 300,
+              temperature: 0
+            })
+          });
+          const data = await res.json();
+          return JSON.parse(data.choices[0].message.content);
+        }
+
+        if (provider === 'gemini') {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.0-flash-exp'}:generateContent?key=${apiKey}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: `${verifierInstruction}\n\n${verificationPrompt}` }] }],
+              generationConfig: { temperature: 0 }
+            })
+          });
+          const data = await res.json();
+          return JSON.parse(data.candidates[0].content.parts[0].text);
+        }
+
+        if (provider === 'mistral') {
+          const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: model || 'mistral-large-latest',
+              messages: [
+                { role: 'system', content: verifierInstruction },
+                { role: 'user', content: verificationPrompt }
+              ],
+              max_tokens: 300,
+              temperature: 0
+            })
+          });
+          const data = await res.json();
+          return JSON.parse(data.choices[0].message.content);
+        }
+      } catch (_) { /* fallthrough */ }
+
+      return { verdict: 'LOW', reasons: ['verification_failed'], unsupported_claims: [] };
+    }
+
+    buildSystemPrompt(context) {
+      const base = `You are WebSage, a page-aware assistant. Be precise, concise, and grounded in the provided page context.\n- Use only information from the page context.\n- If something is not present in the context, say: "Not in page context."\n- Prefer short quotes from the context to support claims.\n- Avoid speculation and do not fabricate references.`;
+      return context && context.length > 0 ? `${base}\n\nPage context follows between <context> tags. Always rely on it.\n<context>\n${context}\n</context>` : base;
+    }
+
+    async callAI(message, context, opts = {}) {
       const { provider } = this.settings;
       const apiKey = this.settings.apiKeys[provider];
 
@@ -2402,9 +2562,10 @@ if (window.webSageLoaded) {
     }
 
     async callOpenAI(message, context, apiKey) {
+      const systemPrompt = this.buildSystemPrompt(context);
       const messages = [
-        ...(context ? [{ role: 'system', content: `Page context: ${context}` }] : []),
-        ...this.chatHistory.slice(-10), // Last 10 messages for context
+        { role: 'system', content: systemPrompt },
+        ...this.chatHistory.slice(-6), // limit history to reduce drift
         { role: 'user', content: message }
       ];
 
@@ -2424,7 +2585,8 @@ if (window.webSageLoaded) {
               model: this.settings.model || 'gpt-4o',
               messages,
               max_tokens: 1000,
-              temperature: 0.7
+              temperature: (opts && typeof opts.temperature === 'number') ? opts.temperature : 0.2,
+              top_p: 0.9
             })
           });
 
@@ -2454,7 +2616,7 @@ if (window.webSageLoaded) {
     }
 
     async callGemini(message, context, apiKey) {
-      const prompt = context ? `Context: ${context}\n\nQuestion: ${message}` : message;
+      const prompt = this.buildSystemPrompt(context) + "\n\nUser message: " + message;
       const model = this.settings.model || 'gemini-2.0-flash-exp';
 
       // Retry logic for rate limiting
@@ -2471,7 +2633,8 @@ if (window.webSageLoaded) {
             body: JSON.stringify({
               contents: [{
                 parts: [{ text: prompt }]
-              }]
+              }],
+              generationConfig: { temperature: (opts && typeof opts.temperature === 'number') ? opts.temperature : 0.2, topP: 0.9 }
             })
           });
 
@@ -2530,7 +2693,8 @@ if (window.webSageLoaded) {
               model: this.settings.model || 'mistral-large-latest',
               messages,
               max_tokens: 1000,
-              temperature: 0.7
+              temperature: (opts && typeof opts.temperature === 'number') ? opts.temperature : 0.2,
+              top_p: 0.9
             })
           });
 

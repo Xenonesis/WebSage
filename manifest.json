@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "WebSage - AI Browser Assistant",
-  "version": "5.0.0",
-  "description": "Advanced AI-powered assistant with NLP, sentiment analysis, conversation intelligence, and multi-modal capabilities for enhanced web browsing.",
+  "name": "WebSage - AI Browser Assistant (Google Powered)",
+  "version": "6.0.0",
+  "description": "Advanced AI assistant powered by Google Gemini, Cloud NLP, Fact Check API, Translation, Safe Browsing & Custom Search for comprehensive web intelligence.",
   "permissions": [
     "storage",
     "activeTab",
@@ -46,11 +46,17 @@
     {
       "resources": [
         "styles.css",
-        "nlp-simple.js"
+        "nlp-simple.js",
+        "google-services.js"
       ],
       "matches": [
         "<all_urls>"
       ]
     }
-  ]
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
 }

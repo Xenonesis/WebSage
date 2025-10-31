@@ -452,39 +452,62 @@
   <div class="header">
     <div class="logo">🧠</div>
     <h1>WebSage</h1>
-    <div class="version">v4.0.0 - Enhanced UI/UX</div>
+    <div class="version">v6.0.0 - Google Powered 🚀</div>
   </div>
 
-  <div class="section">
-    <h3>AI Provider</h3>
+  <div class="section" style="background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); color: white;">
+    <h3 style="color: white;">🚀 AI Provider (Google Gemini)</h3>
     <div class="form-group">
-      <label for="provider">Choose Provider:</label>
+      <label for="provider" style="color: rgba(255,255,255,0.9);">Choose Provider:</label>
       <select id="provider">
+        <option value="gemini" selected>Google Gemini ⭐ (Recommended)</option>
         <option value="openai">OpenAI</option>
-        <option value="gemini">Google Gemini</option>
         <option value="mistral">Mistral AI</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label for="model">Model:</label>
+      <label for="model" style="color: rgba(255,255,255,0.9);">Model:</label>
       <select id="model">
-        <option value="gpt-4o">GPT-4o (Best)</option>
-        <option value="gpt-4-turbo">GPT-4 Turbo</option>
-        <option value="gpt-4">GPT-4</option>
+        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp ⚡ (Fastest)</option>
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro 💎 (Best Quality)</option>
+        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+        <option value="gpt-4o">GPT-4o</option>
         <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
       </select>
     </div>
   </div>
 
   <div class="section">
-    <h3>API Keys</h3>
+    <h3>🔑 Google API Keys</h3>
     <div class="form-group">
-      <label for="apiKey">API Key:</label>
+      <label for="geminiKey">Google Gemini API Key:</label>
       <div class="api-key-input">
-        <input type="password" id="apiKey" placeholder="Enter your API key">
-        <button type="button" class="api-key-toggle" id="toggleApiKey">👁️</button>
+        <input type="password" id="geminiKey" placeholder="Enter Gemini API key (AIza...)">
+        <button type="button" class="api-key-toggle" onclick="toggleApiKeyVisibility('geminiKey')">👁️</button>
       </div>
+      <small style="font-size: 11px; color: #718096;">Get it from: <a href="https://makersuite.google.com/app/apikey" target="_blank" style="color: #4285f4;">Google AI Studio</a></small>
+    </div>
+
+    <div class="form-group">
+      <label for="cloudNlpKey">Cloud Natural Language API Key:</label>
+      <div class="api-key-input">
+        <input type="password" id="cloudNlpKey" placeholder="Enter Cloud NLP API key (optional)">
+        <button type="button" class="api-key-toggle" onclick="toggleApiKeyVisibility('cloudNlpKey')">👁️</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="customSearchKey">Custom Search API Key:</label>
+      <div class="api-key-input">
+        <input type="password" id="customSearchKey" placeholder="For fact-checking (optional)">
+        <button type="button" class="api-key-toggle" onclick="toggleApiKeyVisibility('customSearchKey')">👁️</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="searchEngineId">Search Engine ID:</label>
+      <input type="text" id="searchEngineId" placeholder="Custom Search Engine ID (optional)">
     </div>
   </div>
 
