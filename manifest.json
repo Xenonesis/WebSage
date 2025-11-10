@@ -45,7 +45,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "styles.css"
+        "styles.css",
+        "nlp-simple.js"
       ],
       "matches": [
         "<all_urls>"

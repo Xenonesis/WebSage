@@ -120,10 +120,13 @@ class WebSageBackground {
   }
 
   async toggleWebSage() {
+    console.log('WebSage toggle requested');
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      console.log('Current tab:', tab?.url);
       
       if (!tab || tab.url.startsWith('chrome://') || tab.url.startsWith('about://')) {
+        console.log('WebSage cannot run on this page');
         return;
       }
 
@@ -142,16 +145,22 @@ class WebSageBackground {
       // Wait a moment for the script to initialize
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      await chrome.scripting.executeScript({
+      const result = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
+          console.log('Executing toggle script, webSageToggle exists:', typeof window.webSageToggle);
           if (window.webSageToggle) {
             window.webSageToggle();
+            return 'Toggle executed successfully';
+          } else {
+            console.error('webSageToggle function not found - trying to initialize');
+            return 'webSageToggle function not found';
           }
         }
       });
+      console.log('Script execution result:', result);
     } catch (error) {
-      // Silently handle errors in production
+      console.error('Error toggling WebSage:', error);
     }
   }
 
@@ -206,7 +215,7 @@ class WebSageBackground {
           break;
       }
     } catch (error) {
-      // Silently handle errors in production
+      console.error('Error handling context menu click:', error);
     }
   }
 
@@ -222,7 +231,7 @@ class WebSageBackground {
         args: [action, text]
       });
     } catch (error) {
-      // Silently handle errors in production
+      console.error('Error sending context menu message:', error);
     }
   }
 
@@ -264,12 +273,6 @@ class WebSageBackground {
           entityExtraction: true,
           intentClassification: true,
           conversationInsights: true,
-          animationsEnabled: true,
-          notificationsEnabled: true,
-          autoResize: true,
-          messageEffects: true,
-          voiceInput: false,
-          darkMode: false,
           apiKeys: {}
         };
         chrome.storage.local.set({ webSageSettings: defaultSettings });

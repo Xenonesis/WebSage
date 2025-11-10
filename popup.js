@@ -24,15 +24,10 @@ class WebSagePopup {
           theme: 'light',
           nlpEnabled: true,
           sentimentAnalysis: true,
-          entityExtraction: true,
           intentClassification: true,
           conversationInsights: true,
           animationsEnabled: true,
           notificationsEnabled: true,
-          autoResize: true,
-          messageEffects: true,
-          voiceInput: false,
-          darkMode: false,
           apiKeys: {}
         };
         resolve();
@@ -223,15 +218,10 @@ class WebSagePopup {
       theme: 'light',
       nlpEnabled: true,
       sentimentAnalysis: true,
-      entityExtraction: true,
       intentClassification: true,
       conversationInsights: true,
       animationsEnabled: true,
       notificationsEnabled: true,
-      autoResize: true,
-      messageEffects: true,
-      voiceInput: false,
-      darkMode: false,
       apiKeys: apiKeys
     };
 
