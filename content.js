@@ -2,21 +2,18 @@
 
 // Prevent multiple script executions
 if (window.webSageLoaded) {
-  console.log('WebSage already loaded, skipping initialization');
+  // Already loaded, skip initialization
 } else {
   window.webSageLoaded = true;
 
   // Embed NLP Processor directly to avoid loading issues
-  console.log('🔄 Defining AdvancedNLPProcessor inline...');
   
   class AdvancedNLPProcessor {
     constructor() {
-      console.log('✨ AdvancedNLPProcessor constructor called');
       this.fakeNewsCache = new Map();
     }
 
     detectFakeNews(text) {
-      console.log('🔍 Analyzing text for fake news:', text.substring(0, 50) + '...');
       
       const lowerText = text.toLowerCase();
       let suspicionScore = 0;
@@ -211,7 +208,6 @@ if (window.webSageLoaded) {
         }
       };
 
-      console.log('📊 Advanced fake news analysis result:', result);
       return result;
     }
 
@@ -233,7 +229,6 @@ if (window.webSageLoaded) {
     }
 
     detectBias(text) {
-      console.log('⚖️ Analyzing text for bias:', text.substring(0, 50) + '...');
       
       const lowerText = text.toLowerCase();
       let biasScore = 0;
@@ -415,7 +410,6 @@ if (window.webSageLoaded) {
         }
       };
 
-      console.log('⚖️ Advanced bias analysis result:', result);
       return result;
     }
 
@@ -608,15 +602,6 @@ if (window.webSageLoaded) {
 
   // Make it globally available
   window.AdvancedNLPProcessor = AdvancedNLPProcessor;
-  console.log('🧠 AdvancedNLPProcessor embedded and available globally');
-  
-  // Test it immediately
-  try {
-    const testInstance = new AdvancedNLPProcessor();
-    console.log('✅ Test instance created successfully');
-  } catch (error) {
-    console.error('❌ Failed to create test instance:', error);
-  }
 
   // Intelligent Context Processor for optimized page analysis
   class IntelligentContextProcessor {
@@ -874,7 +859,6 @@ if (window.webSageLoaded) {
         // Detect system preference
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         this.settings.theme = prefersDark ? 'dark' : 'light';
-        console.log('🎨 Auto-detected theme:', this.settings.theme);
       }
       
       this.createChatWindow();
@@ -888,16 +872,10 @@ if (window.webSageLoaded) {
     // Initialize NLP processor - should be available immediately since it's loaded as content script
     initializeNLPProcessor() {
       try {
-        console.log('🔍 Initializing embedded NLP processor...');
-        
         if (window.AdvancedNLPProcessor) {
           this.nlpProcessor = new window.AdvancedNLPProcessor();
-          console.log('✅ Embedded NLP processor initialized successfully');
-        } else {
-          console.error('❌ Embedded AdvancedNLPProcessor not found - this should not happen!');
         }
       } catch (error) {
-        console.error('❌ Failed to initialize embedded NLP processor:', error);
         this.nlpProcessor = null;
       }
     }
@@ -907,7 +885,6 @@ if (window.webSageLoaded) {
         try {
           chrome.storage.local.get(['webSageSettings'], (result) => {
             if (chrome.runtime.lastError) {
-              console.warn('Chrome storage error:', chrome.runtime.lastError);
               this.settings = this.getDefaultSettings();
               resolve();
               return;
@@ -917,7 +894,6 @@ if (window.webSageLoaded) {
             resolve();
           });
         } catch (error) {
-          console.warn('Extension context invalidated, using default settings:', error);
           this.settings = this.getDefaultSettings();
           resolve();
         }
@@ -953,13 +929,11 @@ if (window.webSageLoaded) {
 
     setupGlobalToggle() {
       window.webSageToggle = () => {
-        console.log('WebSage toggle called');
         this.toggle();
       };
 
       // Setup context menu handler
       window.webSageHandleContextMenu = (action, text) => {
-        console.log('Context menu action:', action, text);
         this.handleContextMenuAction(action, text);
       };
 
@@ -968,7 +942,6 @@ if (window.webSageLoaded) {
         this.analyzeCurrentPage();
       };
 
-      console.log('WebSage toggle and context menu functions set up');
     }
 
     async handleContextMenuAction(action, text) {
@@ -989,15 +962,10 @@ if (window.webSageLoaded) {
 
       // Handle text-based analysis actions
       if (action === 'check-fake-news' || action === 'detect-bias') {
-        console.log('🔍 Fake news/bias detection requested');
-        console.log('NLP Processor available:', !!this.nlpProcessor);
-        console.log('Selected text:', text?.substring(0, 100) + '...');
-
         this.show();
         await new Promise(resolve => setTimeout(resolve, 100));
 
         if (!this.nlpProcessor) {
-          console.error('❌ NLP processor not available');
           this.showError('NLP processor not loaded. Please refresh the page and try again.');
           return;
         }
@@ -1071,7 +1039,6 @@ if (window.webSageLoaded) {
         this.addMessage('assistant', assistantMessage);
 
       } catch (error) {
-        console.error('Text analysis error:', error);
         this.showError('Analysis failed. Please try again.');
       }
     }
@@ -1341,7 +1308,6 @@ if (window.webSageLoaded) {
         `;
 
       } catch (error) {
-        console.error('Text analysis error:', error);
         analysisPanel.innerHTML = '<div class="websage-analysis-error">❌ Analysis failed. Please try again.</div>';
       }
     }
@@ -1551,7 +1517,6 @@ if (window.webSageLoaded) {
         `;
 
       } catch (error) {
-        console.error('Credibility analysis error:', error);
         analysisPanel.innerHTML = '<div class="websage-analysis-error">❌ Credibility analysis failed. Please try again.</div>';
       }
     }
@@ -1615,8 +1580,6 @@ if (window.webSageLoaded) {
       this.setupEventListeners();
       this.makeDraggable();
       this.setupThemeDetection();
-      
-      console.log('🎨 Chat window created with theme:', this.settings.theme);
     }
 
     // Setup automatic theme detection and manual toggle
@@ -1651,8 +1614,6 @@ if (window.webSageLoaded) {
         
         // Update theme button
         this.updateThemeButton();
-        
-        console.log('🎨 Theme updated to:', newTheme, '(actual:', actualTheme + ')');
       }
     }
 
@@ -2173,7 +2134,6 @@ if (window.webSageLoaded) {
         this.displayAnalysisResults(analysis);
 
       } catch (error) {
-        console.error('Analysis error:', error);
         analysisPanel.innerHTML = '<div class="websage-analysis-error">❌ Analysis failed. Please try again.</div>';
       }
     }
@@ -2565,18 +2525,11 @@ if (window.webSageLoaded) {
   }
 
   // Initialize WebSage when page loads
-  console.log('WebSage content script loaded');
-
-  // Initialize WebSage - NLP processor should be available since it's loaded as content script
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('🚀 WebSage initializing on DOMContentLoaded');
-      console.log('🔍 Checking AdvancedNLPProcessor availability:', typeof window.AdvancedNLPProcessor);
       new WebSageChat();
     });
   } else {
-    console.log('🚀 WebSage initializing immediately');
-    console.log('🔍 Checking AdvancedNLPProcessor availability:', typeof window.AdvancedNLPProcessor);
     new WebSageChat();
   }
 }

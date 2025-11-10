@@ -24,8 +24,15 @@ class WebSagePopup {
           theme: 'light',
           nlpEnabled: true,
           sentimentAnalysis: true,
+          entityExtraction: true,
           intentClassification: true,
           conversationInsights: true,
+          animationsEnabled: true,
+          notificationsEnabled: true,
+          autoResize: true,
+          messageEffects: true,
+          voiceInput: false,
+          darkMode: false,
           apiKeys: {}
         };
         resolve();
@@ -34,23 +41,49 @@ class WebSagePopup {
   }
 
   setupUI() {
-    // Set current values
-    document.getElementById('provider').value = this.settings.provider;
-    document.getElementById('contextEnabled').checked = this.settings.contextEnabled;
-    document.getElementById('memoryEnabled').checked = this.settings.memoryEnabled;
-    document.getElementById('contextMode').value = this.settings.contextMode;
-    document.getElementById('maxTokens').value = this.settings.maxTokens;
-    document.getElementById('theme').value = this.settings.theme;
+    // Set current values with null checks
+    const provider = document.getElementById('provider');
+    if (provider) provider.value = this.settings.provider;
+    
+    const contextEnabled = document.getElementById('contextEnabled');
+    if (contextEnabled) contextEnabled.checked = this.settings.contextEnabled;
+    
+    const memoryEnabled = document.getElementById('memoryEnabled');
+    if (memoryEnabled) memoryEnabled.checked = this.settings.memoryEnabled;
+    
+    const contextMode = document.getElementById('contextMode');
+    if (contextMode) contextMode.value = this.settings.contextMode;
+    
+    const maxTokens = document.getElementById('maxTokens');
+    if (maxTokens) maxTokens.value = this.settings.maxTokens;
+    
+    const theme = document.getElementById('theme');
+    if (theme) theme.value = this.settings.theme;
     
     // Set NLP settings
-    document.getElementById('nlpEnabled').checked = this.settings.nlpEnabled;
-    document.getElementById('sentimentAnalysis').checked = this.settings.sentimentAnalysis;
-    document.getElementById('intentClassification').checked = this.settings.intentClassification;
-    document.getElementById('conversationInsights').checked = this.settings.conversationInsights;
+    const nlpEnabled = document.getElementById('nlpEnabled');
+    if (nlpEnabled) nlpEnabled.checked = this.settings.nlpEnabled;
+    
+    const sentimentAnalysis = document.getElementById('sentimentAnalysis');
+    if (sentimentAnalysis) sentimentAnalysis.checked = this.settings.sentimentAnalysis;
+    
+    const intentClassification = document.getElementById('intentClassification');
+    if (intentClassification) intentClassification.checked = this.settings.intentClassification;
+    
+    const conversationInsights = document.getElementById('conversationInsights');
+    if (conversationInsights) conversationInsights.checked = this.settings.conversationInsights;
+    
+    // Set UI settings
+    const animationsEnabled = document.getElementById('animationsEnabled');
+    if (animationsEnabled) animationsEnabled.checked = this.settings.animationsEnabled;
+    
+    const notificationsEnabled = document.getElementById('notificationsEnabled');
+    if (notificationsEnabled) notificationsEnabled.checked = this.settings.notificationsEnabled;
     
     // Set API key for current provider
     const apiKey = this.settings.apiKeys[this.settings.provider] || '';
-    document.getElementById('apiKey').value = apiKey;
+    const apiKeyInput = document.getElementById('apiKey');
+    if (apiKeyInput) apiKeyInput.value = apiKey;
     
     // Update model options based on provider
     this.updateModelOptions();
@@ -58,39 +91,71 @@ class WebSagePopup {
 
   setupEventListeners() {
     // Provider change
-    document.getElementById('provider').addEventListener('change', (e) => {
-      this.settings.provider = e.target.value;
-      this.updateModelOptions();
-      this.updateApiKeyField();
-    });
+    const provider = document.getElementById('provider');
+    if (provider) {
+      provider.addEventListener('change', (e) => {
+        this.settings.provider = e.target.value;
+        this.updateModelOptions();
+        this.updateApiKeyField();
+      });
+    }
 
     // API key toggle visibility
-    document.getElementById('toggleApiKey').addEventListener('click', () => {
-      const apiKeyInput = document.getElementById('apiKey');
-      const toggleBtn = document.getElementById('toggleApiKey');
-      
-      if (apiKeyInput.type === 'password') {
-        apiKeyInput.type = 'text';
-        toggleBtn.textContent = '🙈';
-      } else {
-        apiKeyInput.type = 'password';
-        toggleBtn.textContent = '👁️';
-      }
-    });
+    const toggleApiKey = document.getElementById('toggleApiKey');
+    if (toggleApiKey) {
+      toggleApiKey.addEventListener('click', () => {
+        const apiKeyInput = document.getElementById('apiKey');
+        const toggleBtn = document.getElementById('toggleApiKey');
+        
+        if (apiKeyInput && toggleBtn) {
+          if (apiKeyInput.type === 'password') {
+            apiKeyInput.type = 'text';
+            toggleBtn.textContent = '🙈';
+          } else {
+            apiKeyInput.type = 'password';
+            toggleBtn.textContent = '👁️';
+          }
+        }
+      });
+    }
 
     // Save settings
-    document.getElementById('saveSettings').addEventListener('click', () => {
-      this.saveSettings();
-    });
+    const saveSettings = document.getElementById('saveSettings');
+    if (saveSettings) {
+      saveSettings.addEventListener('click', () => {
+        this.saveSettings();
+      });
+    }
 
     // Test connection
-    document.getElementById('testConnection').addEventListener('click', () => {
-      this.testConnection();
-    });
+    const testConnection = document.getElementById('testConnection');
+    if (testConnection) {
+      testConnection.addEventListener('click', () => {
+        this.testConnection();
+      });
+    }
+
+    // Quick test button
+    const quickTest = document.getElementById('quickTest');
+    if (quickTest) {
+      quickTest.addEventListener('click', () => {
+        this.testConnection();
+      });
+    }
+
+    // Quick reset button
+    const quickReset = document.getElementById('quickReset');
+    if (quickReset) {
+      quickReset.addEventListener('click', () => {
+        this.resetSettings();
+      });
+    }
   }
 
   updateModelOptions() {
     const modelSelect = document.getElementById('model');
+    if (!modelSelect) return;
+    
     const provider = this.settings.provider;
     
     // Clear existing options
@@ -137,29 +202,106 @@ class WebSagePopup {
 
   updateApiKeyField() {
     const apiKey = this.settings.apiKeys[this.settings.provider] || '';
-    document.getElementById('apiKey').value = apiKey;
+    const apiKeyInput = document.getElementById('apiKey');
+    if (apiKeyInput) apiKeyInput.value = apiKey;
+  }
+
+  async resetSettings() {
+    if (!confirm('Are you sure you want to reset all settings to defaults? This will not delete your API keys.')) {
+      return;
+    }
+
+    // Reset to default settings but preserve API keys
+    const apiKeys = this.settings.apiKeys;
+    this.settings = {
+      provider: 'openai',
+      model: 'gpt-4o',
+      contextEnabled: true,
+      memoryEnabled: true,
+      contextMode: 'intelligent',
+      maxTokens: 1500,
+      theme: 'light',
+      nlpEnabled: true,
+      sentimentAnalysis: true,
+      entityExtraction: true,
+      intentClassification: true,
+      conversationInsights: true,
+      animationsEnabled: true,
+      notificationsEnabled: true,
+      autoResize: true,
+      messageEffects: true,
+      voiceInput: false,
+      darkMode: false,
+      apiKeys: apiKeys
+    };
+
+    try {
+      await chrome.storage.local.set({ webSageSettings: this.settings });
+      this.setupUI();
+      this.showStatus('Settings reset to defaults!', 'success');
+    } catch (error) {
+      this.showStatus('Failed to reset settings: ' + error.message, 'error');
+    }
   }
 
   async saveSettings() {
-    // Collect form data
-    this.settings.provider = document.getElementById('provider').value;
-    this.settings.model = document.getElementById('model').value;
-    this.settings.contextEnabled = document.getElementById('contextEnabled').checked;
-    this.settings.memoryEnabled = document.getElementById('memoryEnabled').checked;
-    this.settings.contextMode = document.getElementById('contextMode').value;
-    this.settings.maxTokens = parseInt(document.getElementById('maxTokens').value);
-    this.settings.theme = document.getElementById('theme').value;
+    // Collect form data with null checks
+    const provider = document.getElementById('provider');
+    if (provider) this.settings.provider = provider.value;
+    
+    const model = document.getElementById('model');
+    if (model) this.settings.model = model.value;
+    
+    const contextEnabled = document.getElementById('contextEnabled');
+    if (contextEnabled) this.settings.contextEnabled = contextEnabled.checked;
+    
+    const memoryEnabled = document.getElementById('memoryEnabled');
+    if (memoryEnabled) this.settings.memoryEnabled = memoryEnabled.checked;
+    
+    const contextMode = document.getElementById('contextMode');
+    if (contextMode) this.settings.contextMode = contextMode.value;
+    
+    // Validate and save maxTokens
+    const maxTokensEl = document.getElementById('maxTokens');
+    if (maxTokensEl) {
+      const tokens = parseInt(maxTokensEl.value);
+      if (isNaN(tokens) || tokens < 0) {
+        this.showStatus('Invalid max tokens value', 'error');
+        return;
+      }
+      this.settings.maxTokens = tokens;
+    }
+    
+    const theme = document.getElementById('theme');
+    if (theme) this.settings.theme = theme.value;
     
     // Collect NLP settings
-    this.settings.nlpEnabled = document.getElementById('nlpEnabled').checked;
-    this.settings.sentimentAnalysis = document.getElementById('sentimentAnalysis').checked;
-    this.settings.intentClassification = document.getElementById('intentClassification').checked;
-    this.settings.conversationInsights = document.getElementById('conversationInsights').checked;
+    const nlpEnabled = document.getElementById('nlpEnabled');
+    if (nlpEnabled) this.settings.nlpEnabled = nlpEnabled.checked;
+    
+    const sentimentAnalysis = document.getElementById('sentimentAnalysis');
+    if (sentimentAnalysis) this.settings.sentimentAnalysis = sentimentAnalysis.checked;
+    
+    const intentClassification = document.getElementById('intentClassification');
+    if (intentClassification) this.settings.intentClassification = intentClassification.checked;
+    
+    const conversationInsights = document.getElementById('conversationInsights');
+    if (conversationInsights) this.settings.conversationInsights = conversationInsights.checked;
+    
+    // Collect UI settings
+    const animationsEnabled = document.getElementById('animationsEnabled');
+    if (animationsEnabled) this.settings.animationsEnabled = animationsEnabled.checked;
+    
+    const notificationsEnabled = document.getElementById('notificationsEnabled');
+    if (notificationsEnabled) this.settings.notificationsEnabled = notificationsEnabled.checked;
     
     // Save API key for current provider
-    const apiKey = document.getElementById('apiKey').value.trim();
-    if (apiKey) {
-      this.settings.apiKeys[this.settings.provider] = apiKey;
+    const apiKeyInput = document.getElementById('apiKey');
+    if (apiKeyInput) {
+      const apiKey = apiKeyInput.value.trim();
+      if (apiKey) {
+        this.settings.apiKeys[this.settings.provider] = apiKey;
+      }
     }
 
     try {
@@ -171,7 +313,13 @@ class WebSagePopup {
   }
 
   async testConnection() {
-    const apiKey = document.getElementById('apiKey').value.trim();
+    const apiKeyInput = document.getElementById('apiKey');
+    if (!apiKeyInput) {
+      this.showStatus('API key input not found', 'error');
+      return;
+    }
+    
+    const apiKey = apiKeyInput.value.trim();
     const provider = this.settings.provider;
 
     if (!apiKey) {
@@ -231,6 +379,8 @@ class WebSagePopup {
 
   showStatus(message, type) {
     const statusDiv = document.getElementById('status');
+    if (!statusDiv) return;
+    
     statusDiv.textContent = message;
     statusDiv.className = `status ${type}`;
     statusDiv.style.display = 'block';
