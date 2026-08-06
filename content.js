@@ -339,7 +339,7 @@ if (window.webSageLoaded) {
       
       return {
         provider: 'openai',
-        model: 'gpt-4o',
+        model: 'gpt-5.6-sol',
         contextEnabled: true,
         memoryEnabled: true,
         contextMode: 'intelligent',
@@ -1869,7 +1869,7 @@ if (window.webSageLoaded) {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              model: this.settings.model || 'gpt-4o',
+              model: this.settings.model || 'gpt-5.6-sol',
               messages,
               max_tokens: 1000,
               temperature: 0.7
@@ -1903,7 +1903,7 @@ if (window.webSageLoaded) {
 
     async callGemini(message, context, apiKey) {
       const prompt = context ? `Context: ${context}\n\nQuestion: ${message}` : message;
-      const model = this.settings.model || 'gemini-2.0-flash-exp';
+      const model = this.settings.model || 'gemini-3.6-flash';
 
       // Retry logic for rate limiting
       const maxRetries = 3;
@@ -1975,7 +1975,7 @@ if (window.webSageLoaded) {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              model: this.settings.model || 'mistral-large-latest',
+              model: this.settings.model || 'mistral-medium-latest',
               messages,
               max_tokens: 1000,
               temperature: 0.7

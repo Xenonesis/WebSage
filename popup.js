@@ -16,7 +16,7 @@ class WebSagePopup {
       chrome.storage.local.get(['webSageSettings'], (result) => {
         this.settings = result.webSageSettings || {
           provider: 'openai',
-          model: 'gpt-4o',
+          model: 'gpt-5.6-sol',
           contextEnabled: true,
           memoryEnabled: true,
           contextMode: 'intelligent',
@@ -160,26 +160,26 @@ class WebSagePopup {
     switch (provider) {
       case 'openai':
         models = [
-          { value: 'gpt-4o', text: 'GPT-4o (Best)' },
-          { value: 'gpt-4-turbo', text: 'GPT-4 Turbo' },
-          { value: 'gpt-4', text: 'GPT-4' },
-          { value: 'gpt-3.5-turbo', text: 'GPT-3.5 Turbo' }
+          { value: 'gpt-5.6-sol', text: 'GPT-5.6 Sol (Best)' },
+          { value: 'gpt-5.5', text: 'GPT-5.5' },
+          { value: 'gpt-5.4-mini', text: 'GPT-5.4 mini' },
+          { value: 'gpt-5.4-nano', text: 'GPT-5.4 nano' }
         ];
         break;
       case 'gemini':
         models = [
-          { value: 'gemini-2.0-flash-exp', text: 'Gemini 2.0 Flash (Best)' },
-          { value: 'gemini-1.5-pro', text: 'Gemini 1.5 Pro' },
-          { value: 'gemini-1.5-flash', text: 'Gemini 1.5 Flash' },
-          { value: 'gemini-1.0-pro', text: 'Gemini 1.0 Pro' }
+          { value: 'gemini-3.6-flash', text: 'Gemini 3.6 Flash (Best)' },
+          { value: 'gemini-3.5-flash', text: 'Gemini 3.5 Flash' },
+          { value: 'gemini-3.5-flash-lite', text: 'Gemini 3.5 Flash-Lite' },
+          { value: 'gemini-3.1-flash-lite', text: 'Gemini 3.1 Flash-Lite' },
+          { value: 'gemini-2.5-pro', text: 'Gemini 2.5 Pro' }
         ];
         break;
       case 'mistral':
         models = [
-          { value: 'mistral-large-latest', text: 'Mistral Large (Best)' },
-          { value: 'mistral-medium-latest', text: 'Mistral Medium' },
-          { value: 'mistral-small-latest', text: 'Mistral Small' },
-          { value: 'mistral-tiny', text: 'Mistral Tiny' }
+          { value: 'mistral-medium-latest', text: 'Mistral Medium 3.5 (Best)' },
+          { value: 'mistral-large-latest', text: 'Mistral Large 3' },
+          { value: 'mistral-small-latest', text: 'Mistral Small 4' }
         ];
         break;
     }
@@ -210,7 +210,7 @@ class WebSagePopup {
     const apiKeys = this.settings.apiKeys;
     this.settings = {
       provider: 'openai',
-      model: 'gpt-4o',
+      model: 'gpt-5.6-sol',
       contextEnabled: true,
       memoryEnabled: true,
       contextMode: 'intelligent',

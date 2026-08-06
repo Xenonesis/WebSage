@@ -181,7 +181,7 @@ class WebSageBackground {
       if (!result.webSageSettings) {
         const defaultSettings = {
           provider: 'openai',
-          model: 'gpt-4o',
+          model: 'gpt-5.6-sol',
           contextEnabled: true,
           memoryEnabled: true,
           contextMode: 'intelligent',

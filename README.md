@@ -127,29 +127,28 @@ Right-click any text or page for instant AI actions:
 <td align="center" width="33%">
 
 **🔥 OpenAI**
-- GPT-4o
-- GPT-4o-mini  
-- GPT-4 Turbo
-- GPT-4
-- GPT-3.5 Turbo
+- GPT-5.6 Sol
+- GPT-5.5
+- GPT-5.4 mini
+- GPT-5.4 nano
 
 </td>
 <td align="center" width="33%">
 
 **💎 Google Gemini**
-- Gemini 2.0 Flash ⚡
-- Gemini 1.5 Pro
-- Gemini 1.5 Flash
-- Gemini 1.0 Pro
+- Gemini 3.6 Flash ⚡
+- Gemini 3.5 Flash
+- Gemini 3.5 Flash-Lite
+- Gemini 3.1 Flash-Lite
+- Gemini 2.5 Pro
 
 </td>
 <td align="center" width="33%">
 
 **🚀 Mistral AI**
-- Mistral Large
-- Mistral Medium
-- Mistral Small
-- Mistral Tiny
+- Mistral Medium 3.5
+- Mistral Large 3
+- Mistral Small 4
 
 </td>
 </tr>
