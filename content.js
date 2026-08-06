@@ -1844,6 +1844,8 @@ if (window.webSageLoaded) {
           return this.callGemini(message, context, apiKey);
         case 'mistral':
           return this.callMistral(message, context, apiKey);
+        case 'kilo':
+          return this.callKilo(message, context, apiKey);
         default:
           throw new Error('Unknown AI provider');
       }
@@ -1994,6 +1996,59 @@ if (window.webSageLoaded) {
           if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Mistral API error: ${response.status} - ${errorText}`);
+          }
+
+          const data = await response.json();
+          return data.choices[0].message.content;
+        } catch (error) {
+          if (attempt === maxRetries - 1) {
+            throw error;
+          }
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    }
+
+    async callKilo(message, context, apiKey) {
+      const messages = [
+        ...(context ? [{ role: 'system', content: `Page context: ${context}` }] : []),
+        ...this.chatHistory.slice(-10),
+        { role: 'user', content: message }
+      ];
+
+      // Kilo AI Gateway — OpenAI-compatible chat completions endpoint.
+      // Retry logic for rate limiting (~200 req/hr on the free tier).
+      const maxRetries = 3;
+      let retryDelay = 1000;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await fetch('https://api.kilo.ai/api/gateway/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: this.settings.model || 'anthropic/claude-sonnet-4.5',
+              messages,
+              max_tokens: 1000,
+              temperature: 0.7
+            })
+          });
+
+          if (response.status === 429) {
+            if (attempt < maxRetries - 1) {
+              await new Promise(resolve => setTimeout(resolve, retryDelay));
+              retryDelay *= 2;
+              continue;
+            }
+            throw new Error(`Rate limit exceeded. Please wait a moment and try again.`);
+          }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Kilo API error: ${response.status} - ${errorText}`);
           }
 
           const data = await response.json();

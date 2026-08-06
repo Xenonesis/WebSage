@@ -182,6 +182,16 @@ class WebSagePopup {
           { value: 'mistral-small-latest', text: 'Mistral Small 4' }
         ];
         break;
+      case 'kilo':
+        models = [
+          { value: 'anthropic/claude-sonnet-4.5', text: 'Claude Sonnet 4.5 (Best)' },
+          { value: 'x-ai/grok-code-fast-1:free', text: 'Grok Code Fast (Free)' },
+          { value: 'nvidia/nemotron-3-ultra-550b-a55b:free', text: 'Nemotron 3 Ultra (Free)' },
+          { value: 'minimax/minimax-m2.5:free', text: 'MiniMax M2.5 (Free)' },
+          { value: 'arcee-ai/trinity-large-thinking:free', text: 'Trinity Large Thinking (Free)' },
+          { value: 'bytedance-seed/dola-seed-2.0-pro:free', text: 'DOLA Seed 2.0 Pro (Free)' }
+        ];
+        break;
     }
     
     models.forEach(model => {
@@ -191,8 +201,8 @@ class WebSagePopup {
       modelSelect.appendChild(option);
     });
     
-    // Set current model or default to first option
-    modelSelect.value = this.settings.model || models[0].value;
+    // Set current model if valid for this provider, else default to first option
+    modelSelect.value = models.some(m => m.value === this.settings.model) ? this.settings.model : models[0].value;
   }
 
   updateApiKeyField() {
@@ -332,6 +342,9 @@ class WebSagePopup {
         case 'mistral':
           isValid = await this.testMistral(apiKey);
           break;
+        case 'kilo':
+          isValid = await this.testKilo(apiKey);
+          break;
       }
 
       if (isValid) {
@@ -360,6 +373,15 @@ class WebSagePopup {
 
   async testMistral(apiKey) {
     const response = await fetch('https://api.mistral.ai/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+    return response.ok;
+  }
+
+  async testKilo(apiKey) {
+    const response = await fetch('https://api.kilo.ai/api/gateway/models', {
       headers: {
         'Authorization': `Bearer ${apiKey}`
       }

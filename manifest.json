@@ -18,7 +18,8 @@
   "host_permissions": [
     "https://api.openai.com/*",
     "https://generativelanguage.googleapis.com/*",
-    "https://api.mistral.ai/*"
+    "https://api.mistral.ai/*",
+    "https://api.kilo.ai/*"
   ],
   "background": {
     "service_worker": "background.js"

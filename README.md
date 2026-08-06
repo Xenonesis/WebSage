@@ -124,7 +124,7 @@ Right-click any text or page for instant AI actions:
 
 <table>
 <tr>
-<td align="center" width="33%">
+<td align="center" width="25%">
 
 **🔥 OpenAI**
 - GPT-5.6 Sol
@@ -133,7 +133,7 @@ Right-click any text or page for instant AI actions:
 - GPT-5.4 nano
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="25%">
 
 **💎 Google Gemini**
 - Gemini 3.6 Flash ⚡
@@ -143,12 +143,23 @@ Right-click any text or page for instant AI actions:
 - Gemini 2.5 Pro
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="25%">
 
 **🚀 Mistral AI**
 - Mistral Medium 3.5
 - Mistral Large 3
 - Mistral Small 4
+
+</td>
+<td align="center" width="25%">
+
+**⚡ Kilo AI**
+- Claude Sonnet 4.5
+- Grok Code Fast (Free)
+- Nemotron 3 Ultra (Free)
+- MiniMax M2.5 (Free)
+- Trinity Large Thinking (Free)
+- DOLA Seed 2.0 Pro (Free)
 
 </td>
 </tr>
@@ -235,7 +246,7 @@ cd WebSage
 
 <table>
 <tr>
-<td width="33%">
+<td width="25%">
 
 **🔥 OpenAI**
 1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
@@ -243,7 +254,7 @@ cd WebSage
 3. Copy key to WebSage settings
 
 </td>
-<td width="33%">
+<td width="25%">
 
 **💎 Google Gemini**
 1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
@@ -251,12 +262,20 @@ cd WebSage
 3. Paste in WebSage
 
 </td>
-<td width="33%">
+<td width="25%">
 
 **🚀 Mistral AI**
 1. Access [Mistral Console](https://console.mistral.ai/)
 2. Create API key
 3. Configure in settings
+
+</td>
+<td width="25%">
+
+**⚡ Kilo AI**
+1. Sign up at [kilo.ai](https://kilo.ai)
+2. Generate an API key (API Keys page)
+3. Paste in WebSage
 
 </td>
 </tr>
