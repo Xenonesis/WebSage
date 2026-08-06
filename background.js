@@ -22,12 +22,6 @@ class WebSageBackground {
     chrome.runtime.onInstalled.addListener(() => {
       this.initializeExtension();
     });
-
-    // Handle messages from content scripts
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      this.handleMessage(request, sender, sendResponse);
-      return true; // Keep message channel open for async response
-    });
   }
 
   setupContextMenus() {
@@ -124,135 +118,60 @@ class WebSageBackground {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       console.log('Current tab:', tab?.url);
-      
-      if (!tab || tab.url.startsWith('chrome://') || tab.url.startsWith('about://')) {
+
+      if (!tab || !tab.id || tab.url.startsWith('chrome://') || tab.url.startsWith('about://')) {
         console.log('WebSage cannot run on this page');
         return;
       }
 
-      // First, inject CSS styles
-      await chrome.scripting.insertCSS({
-        target: { tabId: tab.id },
-        files: ['styles.css']
-      });
-
-      // Then inject the content script if it's not already there
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content.js']
-      });
-
-      // Wait a moment for the script to initialize
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      const result = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          console.log('Executing toggle script, webSageToggle exists:', typeof window.webSageToggle);
-          if (window.webSageToggle) {
-            window.webSageToggle();
-            return 'Toggle executed successfully';
-          } else {
-            console.error('webSageToggle function not found - trying to initialize');
-            return 'webSageToggle function not found';
-          }
-        }
-      });
-      console.log('Script execution result:', result);
+      // The content script is declared in manifest content_scripts, so on
+      // normal pages it is already present — message it directly. Only if
+      // the receiver is missing (e.g. the extension was reloaded after the
+      // page loaded) do we inject the script once.
+      try {
+        await chrome.tabs.sendMessage(tab.id, { type: 'websage-command', command: 'toggle' });
+      } catch (err) {
+        await chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ['styles.css'] });
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+        await chrome.tabs.sendMessage(tab.id, { type: 'websage-command', command: 'toggle' });
+      }
     } catch (error) {
       console.error('Error toggling WebSage:', error);
     }
   }
 
   async handleContextMenuClick(info, tab) {
-    if (!tab || tab.url.startsWith('chrome://') || tab.url.startsWith('about://')) {
+    if (!tab || !tab.id || tab.url.startsWith('chrome://') || tab.url.startsWith('about://')) {
       return;
     }
 
+    // Map context menu items to content-side commands.
+    const commandMap = {
+      'websage-explain': 'explain',
+      'websage-summarize': 'summarize',
+      'websage-translate': 'translate',
+      'websage-analyze-sentiment': 'analyze',
+      'websage-check-fake-news': 'check-fake-news',
+      'websage-detect-bias': 'detect-bias',
+      'websage-analyze-page': 'analyze-page',
+      'websage-check-page-credibility': 'check-credibility',
+      'websage-chat': 'open-chat'
+    };
+    const command = commandMap[info.menuItemId];
+    if (!command) return;
+
     try {
-      // Inject scripts first
-      await chrome.scripting.insertCSS({
-        target: { tabId: tab.id },
-        files: ['styles.css']
-      });
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content.js']
-      });
-
-      // Wait for initialization
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Handle different context menu actions
-      switch (info.menuItemId) {
-        case 'websage-explain':
-          await this.sendContextMenuMessage(tab.id, 'explain', info.selectionText);
-          break;
-        case 'websage-summarize':
-          await this.sendContextMenuMessage(tab.id, 'summarize', info.selectionText);
-          break;
-        case 'websage-translate':
-          await this.sendContextMenuMessage(tab.id, 'translate', info.selectionText);
-          break;
-        case 'websage-analyze-sentiment':
-          await this.sendContextMenuMessage(tab.id, 'analyze', info.selectionText);
-          break;
-        case 'websage-check-fake-news':
-          await this.sendContextMenuMessage(tab.id, 'check-fake-news', info.selectionText);
-          break;
-        case 'websage-detect-bias':
-          await this.sendContextMenuMessage(tab.id, 'detect-bias', info.selectionText);
-          break;
-        case 'websage-analyze-page':
-          await this.sendContextMenuMessage(tab.id, 'analyze-page', '');
-          break;
-        case 'websage-check-page-credibility':
-          await this.sendContextMenuMessage(tab.id, 'check-credibility', '');
-          break;
-        case 'websage-chat':
-          await this.sendContextMenuMessage(tab.id, 'toggle', '');
-          break;
+      const text = info.selectionText || '';
+      try {
+        await chrome.tabs.sendMessage(tab.id, { type: 'websage-command', command, text });
+      } catch (err) {
+        // Content script missing (extension reloaded after page load): inject once.
+        await chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ['styles.css'] });
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+        await chrome.tabs.sendMessage(tab.id, { type: 'websage-command', command, text });
       }
     } catch (error) {
       console.error('Error handling context menu click:', error);
-    }
-  }
-
-  async sendContextMenuMessage(tabId, action, text) {
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId },
-        func: (action, text) => {
-          if (window.webSageHandleContextMenu) {
-            window.webSageHandleContextMenu(action, text);
-          }
-        },
-        args: [action, text]
-      });
-    } catch (error) {
-      console.error('Error sending context menu message:', error);
-    }
-  }
-
-  handleMessage(request, sender, sendResponse) {
-    switch (request.type) {
-      case 'getSettings':
-        chrome.storage.local.get(['webSageSettings'], (result) => {
-          sendResponse(result.webSageSettings);
-        });
-        break;
-      case 'saveSettings':
-        chrome.storage.local.set({ webSageSettings: request.settings }, () => {
-          sendResponse({ success: true });
-        });
-        break;
-      case 'analyzeText':
-        // Could be used for server-side NLP processing if needed
-        sendResponse({ analysis: 'Client-side processing' });
-        break;
-      default:
-        sendResponse({ error: 'Unknown message type' });
     }
   }
 

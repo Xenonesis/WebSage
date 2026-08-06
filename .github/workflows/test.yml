@@ -1,4 +1,4 @@
-name: WebSage v3.0 Tests
+name: WebSage CI
 
 on:
   push:
@@ -9,102 +9,41 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
-        
-    - name: Validate manifest.json
+
+    - name: Syntax check all extension scripts
       run: |
-        echo "Validating Chrome extension manifest..."
-        node -e "
-          const manifest = require('./manifest.json');
-          console.log('✅ Manifest version:', manifest.version);
-          console.log('✅ Manifest valid');
-        "
-        
-    - name: Test NLP Processor Syntax
+        node --check background.js
+        node --check content.js
+        node --check popup.js
+        node --check nlp.js
+        node --check nlp.test.js
+        node --check scripts/generate-icons.js
+        node --check scripts/validate-manifest.js
+        node --check scripts/scan-secrets.js
+
+    - name: NLP unit tests
+      run: node --test nlp.test.js
+
+    - name: Validate manifest and bundled files
+      run: node scripts/validate-manifest.js
+
+    - name: Secret / inline-handler scan
+      run: node scripts/scan-secrets.js
+
+    - name: Validate documentation files exist
       run: |
-        echo "Testing NLP processor syntax..."
-        node -c content.js
-        echo "✅ Content script syntax valid"
-        
-    - name: Validate Extension Structure
-      run: |
-        echo "Validating extension structure..."
-        test -f manifest.json && echo "✅ manifest.json exists"
-        test -f content.js && echo "✅ content.js exists"
-        test -f background.js && echo "✅ background.js exists"
-        test -f popup.html && echo "✅ popup.html exists"
-        test -f popup.js && echo "✅ popup.js exists"
-        test -f styles.css && echo "✅ styles.css exists"
-        test -d icons && echo "✅ icons directory exists"
-        
-    - name: Check File Sizes
-      run: |
-        echo "Checking file sizes for performance..."
-        ls -lh *.js *.css *.html | awk '{print $5, $9}'
-        
-    - name: Validate README
-      run: |
-        echo "Validating documentation..."
-        test -f README_v3.md && echo "✅ README_v3.md exists"
-        test -f CHANGELOG.md && echo "✅ CHANGELOG.md exists"
-        test -f CONTRIBUTING.md && echo "✅ CONTRIBUTING.md exists"
-        
-  fake-news-detection-test:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Test Fake News Detection Patterns
-      run: |
-        echo "Testing fake news detection patterns..."
-        node -e "
-          // Test basic pattern matching
-          const testTexts = [
-            'SHOCKING! You won\\'t believe this AMAZING discovery!',
-            'According to peer-reviewed research, scientists have found evidence.',
-            'Doctors hate this ONE WEIRD TRICK that Big Pharma is hiding!'
-          ];
-          
-          console.log('✅ Fake news detection patterns test completed');
-          console.log('Test texts processed:', testTexts.length);
-        "
-        
-  security-check:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Check for sensitive data
-      run: |
-        echo "Checking for sensitive data..."
-        ! grep -r "api_key\|password\|secret" --include="*.js" --include="*.json" . || exit 1
-        echo "✅ No sensitive data found in code"
-        
-    - name: Validate permissions
-      run: |
-        echo "Validating extension permissions..."
-        node -e "
-          const manifest = require('./manifest.json');
-          const permissions = manifest.permissions;
-          console.log('Permissions:', permissions);
-          
-          // Check for minimal permissions
-          const requiredPerms = ['storage', 'activeTab', 'scripting', 'contextMenus'];
-          const hasRequired = requiredPerms.every(perm => permissions.includes(perm));
-          
-          if (hasRequired) {
-            console.log('✅ Required permissions present');
-          } else {
-            console.log('❌ Missing required permissions');
-            process.exit(1);
-          }
-        "
+        for f in README.md SECURITY.md CHANGELOG.md; do
+          if [ ! -s "$f" ]; then
+            echo "Missing or empty $f"
+            exit 1
+          fi
+        done
+        echo "Documentation files present"

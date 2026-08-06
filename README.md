@@ -52,7 +52,7 @@ WebSage is a revolutionary Chrome browser extension that brings the power of adv
 
 - **🧠 Advanced NLP**: Real-time sentiment analysis, intent classification, and entity recognition
 - **🛡️ Content Analysis**: Fake news detection, bias analysis, and credibility scoring
-- **🔒 Privacy First**: All processing happens locally - your data never leaves your browser
+- **🔒 Privacy First**: NLP analysis runs locally in your browser; AI chat requests go directly to the provider you choose (OpenAI, Gemini, or Mistral)
 - **🎨 Beautiful UI**: Elegant, responsive interface with dark/light themes
 - **⚡ Lightning Fast**: Optimized performance with intelligent caching and parallel processing
 - **🌐 Universal**: Works on any HTTPS website with seamless integration
@@ -425,10 +425,10 @@ graph LR
 <td width="50%">
 
 **🔐 Data Protection**
-- **🏠 Local Storage Only** - API keys never leave your browser
+- **🏠 Local Storage Only** - Settings and conversation history are stored locally in your browser
 - **🚫 Zero Tracking** - No analytics or data collection
 - **🔒 HTTPS Encryption** - Secure AI provider communication
-- **💻 Client-Side NLP** - All processing happens locally
+- **💻 Client-Side NLP** - Fake news, bias, and sentiment analysis run locally in your browser
 - **🗑️ User Control** - Manage conversation retention
 
 </td>

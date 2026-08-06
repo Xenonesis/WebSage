@@ -52,11 +52,11 @@ WebSage is designed with security and privacy as core principles:
 - **No External Tracking**: Zero analytics, telemetry, or user behavior tracking
 - **HTTPS Only**: All API communications use secure HTTPS connections
 - **Client-Side Processing**: NLP analysis performed locally without external services
-- **No Data Transmission**: User data never sent to WebSage servers (we don't have any)
+- **No Data Transmission**: User data never sent to WebSage servers (we don't have any). When you use AI chat features, your message text and page context are sent to the provider you configure (OpenAI, Gemini, or Mistral) over HTTPS.
 
 ### 🛡️ API Key Security
 - **Encrypted Storage**: API keys stored using Chrome's secure storage APIs
-- **Never Exposed**: Keys never appear in DOM, console logs, or network requests
+- **Never Exposed**: Keys never appear in the DOM or console logs
 - **User Controlled**: Users manage their own API keys directly with providers
 - **Secure Transmission**: Keys only sent directly to respective AI providers over HTTPS
 

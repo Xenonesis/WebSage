@@ -3,6 +3,12 @@
   "name": "WebSage - AI Browser Assistant",
   "version": "5.0.0",
   "description": "Advanced AI-powered assistant with NLP, sentiment analysis, conversation intelligence, and multi-modal capabilities for enhanced web browsing.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "storage",
     "activeTab",
@@ -10,7 +16,9 @@
     "contextMenus"
   ],
   "host_permissions": [
-    "https://*/*"
+    "https://api.openai.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.mistral.ai/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,6 +30,7 @@
         "http://*/*"
       ],
       "js": [
+        "nlp.js",
         "content.js"
       ],
       "css": [
@@ -32,7 +41,13 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "WebSage Settings"
+    "default_title": "WebSage Settings",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "commands": {
     "toggle-websage": {
@@ -41,16 +56,5 @@
       },
       "description": "Toggle WebSage chat window"
     }
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "styles.css",
-        "nlp-simple.js"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
-  ]
+  }
 }
