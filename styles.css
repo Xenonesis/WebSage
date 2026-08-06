@@ -6,7 +6,7 @@
   width: 420px;
   height: 560px;
   border-radius: 16px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   z-index: 2147483647;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
@@ -23,16 +23,16 @@
 
 /* Light theme (explicit) */
 #websage-chat-window.light {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid rgba(226, 232, 240, 0.8) !important;
-  color: #1a202c !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e5e5 !important;
+  color: #171717 !important;
 }
 
 /* Dark theme */
 #websage-chat-window.dark {
-  background: rgba(26, 32, 44, 0.95) !important;
-  border: 1px solid rgba(71, 85, 105, 0.8) !important;
-  color: #f7fafc !important;
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #ededed !important;
 }
 
 /* Header */
@@ -49,13 +49,13 @@
 }
 
 #websage-chat-window.light .websage-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e5e5 !important;
 }
 
 #websage-chat-window.dark .websage-header {
-  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #18181b !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .websage-title {
@@ -67,24 +67,16 @@
 }
 
 #websage-chat-window.light .websage-title {
-  color: #ffffff !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: #171717 !important;
 }
 
 #websage-chat-window.dark .websage-title {
-  color: #ffffff !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: #ededed !important;
 }
 
 .websage-logo {
   margin-right: 10px;
   font-size: 20px;
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-3px); }
 }
 
 .websage-controls {
@@ -96,63 +88,61 @@
 .websage-select {
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
   outline: none;
   font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding: 6px 28px 6px 12px;
 }
 
 #websage-chat-window.light .websage-select {
-  background: rgba(255, 255, 255, 0.9) !important;
-  color: #4a5568 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: transparent !important;
+  color: #171717 !important;
+  border: 1px solid #e5e5e5;
 }
 
 #websage-chat-window.light .websage-select:hover {
-  background: #ffffff !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: #f4f4f5 !important;
 }
 
 #websage-chat-window.dark .websage-select {
-  background: rgba(45, 55, 72, 0.9) !important;
-  color: #e2e8f0 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background-color: transparent !important;
+  color: #ededed !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #websage-chat-window.dark .websage-select:hover {
-  background: rgba(71, 85, 105, 0.9) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 .websage-btn-icon {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
   border: none;
   cursor: pointer;
   padding: 6px;
-  border-radius: 8px;
-  font-size: 16px;
-  opacity: 0.8;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #171717;
   transition: all 0.2s;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .websage-btn-icon:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
+  background: #f4f4f5;
 }
 
 #websage-chat-window.dark .websage-btn-icon {
-  background: rgba(255, 255, 255, 0.1);
+  color: #ededed;
 }
 
 #websage-chat-window.dark .websage-btn-icon:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #262626;
 }
 
 /* Messages */
@@ -191,23 +181,9 @@
 }
 
 .websage-message-user .websage-message-content {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 20px 20px 6px 20px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.websage-message-user .websage-message-content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
-  pointer-events: none;
+  background: #000000;
+  color: #ffffff;
+  border-radius: 4px;
 }
 
 .websage-message-assistant {
@@ -215,19 +191,17 @@
 }
 
 #websage-chat-window.light .websage-message-assistant .websage-message-content {
-  background: #f7fafc !important;
-  color: #2d3748 !important;
-  border-radius: 20px 20px 20px 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: transparent !important;
+  color: #171717 !important;
+  border-left: 2px solid #000000;
+  padding-left: 16px;
 }
 
 #websage-chat-window.dark .websage-message-assistant .websage-message-content {
-  background: #2d3748 !important;
-  color: #f7fafc !important;
-  border-radius: 20px 20px 20px 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(71, 85, 105, 0.8);
+  background: transparent !important;
+  color: #ededed !important;
+  border-left: 2px solid #ffffff;
+  padding-left: 16px;
 }
 
 .websage-message-content {
@@ -298,17 +272,17 @@
 }
 
 #websage-chat-window.light .websage-input-container {
-  border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-top: 1px solid #e5e5e5 !important;
 }
 
 #websage-chat-window.dark .websage-input-container {
-  border-top: 1px solid rgba(71, 85, 105, 0.8) !important;
+  border-top: 1px solid #262626 !important;
 }
 
 #websage-input {
   flex: 1;
-  border-radius: 24px;
-  padding: 12px 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
   resize: none;
   outline: none;
   font-family: inherit;
@@ -316,75 +290,50 @@
   line-height: 1.5;
   max-height: 120px;
   transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: transparent !important;
+  border: none !important;
 }
 
 #websage-chat-window.light #websage-input {
-  background: #ffffff !important;
-  border: 2px solid rgba(226, 232, 240, 0.8) !important;
-  color: #2d3748 !important;
-}
-
-#websage-chat-window.light #websage-input:focus {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  background: rgba(0, 0, 0, 0.03) !important;
 }
 
 #websage-chat-window.dark #websage-input {
-  background: #1a202c !important;
-  border: 2px solid rgba(71, 85, 105, 0.8) !important;
-  color: #f7fafc !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
-#websage-chat-window.dark #websage-input:focus {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+#websage-chat-window.light #websage-input {
+  color: #171717 !important;
+}
+
+#websage-chat-window.dark #websage-input {
+  color: #ededed !important;
 }
 
 .websage-btn-send {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: transparent;
+  color: #171717;
   border: none;
-  border-radius: 24px;
-  padding: 12px 24px;
+  padding: 12px 16px;
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  position: relative;
-  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
 }
 
-.websage-btn-send::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.websage-btn-send:hover::before {
-  left: 100%;
+#websage-chat-window.dark .websage-btn-send {
+  color: #ededed;
 }
 
 .websage-btn-send:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-.websage-btn-send:active {
-  transform: translateY(0);
+  opacity: 0.7;
 }
 
 .websage-btn-send:disabled {
-  background: #cbd5e0;
+  opacity: 0.3;
   cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
 }
 
 /* Status */

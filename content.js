@@ -1103,18 +1103,24 @@ if (window.webSageLoaded) {
       if (themeBtn) {
         let icon, title;
         
+        const icons = {
+          sun: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+          moon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+          auto: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`
+        };
+        
         if (this.settings.theme === 'dark') {
-          icon = '☀️';
+          icon = icons.sun;
           title = 'Switch to Light Mode';
         } else if (this.settings.theme === 'light') {
-          icon = '🌙';
+          icon = icons.moon;
           title = 'Switch to Dark Mode';
         } else {
-          icon = '🔄';
+          icon = icons.auto;
           title = 'Switch to Auto Mode';
         }
         
-        themeBtn.textContent = icon;
+        themeBtn.innerHTML = icon;
         themeBtn.title = title;
       }
     }
@@ -1142,7 +1148,6 @@ if (window.webSageLoaded) {
       return `
         <div class="websage-header">
           <div class="websage-title">
-            <span class="websage-logo">🧠</span>
             WebSage
           </div>
           <div class="websage-performance" id="websage-performance"></div>
@@ -1150,10 +1155,16 @@ if (window.webSageLoaded) {
             <select id="websage-provider" class="websage-select">
               ${optionsHtml}
             </select>
-            <button id="websage-theme" class="websage-btn-icon" title="Toggle Theme">🌙</button>
-            <button id="websage-analyze" class="websage-btn-icon" title="Analyze Page">🔍</button>
-            <button id="websage-clear" class="websage-btn-icon" title="Clear Chat">🗑️</button>
-            <button id="websage-close" class="websage-btn-icon" title="Close">✕</button>
+            <button id="websage-theme" class="websage-btn-icon" title="Toggle Theme"></button>
+            <button id="websage-analyze" class="websage-btn-icon" title="Analyze Page">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+            <button id="websage-clear" class="websage-btn-icon" title="Clear Chat">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+            <button id="websage-close" class="websage-btn-icon" title="Close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
           </div>
         </div>
         <div class="websage-analysis" id="websage-analysis" style="display: none;"></div>
