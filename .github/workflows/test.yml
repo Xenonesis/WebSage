@@ -2,9 +2,9 @@ name: WebSage CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -23,14 +23,9 @@ jobs:
         node --check background.js
         node --check content.js
         node --check popup.js
-        node --check nlp.js
-        node --check nlp.test.js
         node --check scripts/generate-icons.js
         node --check scripts/validate-manifest.js
         node --check scripts/scan-secrets.js
-
-    - name: NLP unit tests
-      run: node --test nlp.test.js
 
     - name: Validate manifest and bundled files
       run: node scripts/validate-manifest.js

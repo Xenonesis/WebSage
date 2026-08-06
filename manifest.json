@@ -31,7 +31,6 @@
         "http://*/*"
       ],
       "js": [
-        "nlp.js",
         "content.js"
       ],
       "css": [

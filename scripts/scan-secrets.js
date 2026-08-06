@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const FILES = ['background.js', 'content.js', 'popup.js', 'nlp.js', 'popup.html', 'manifest.json'];
+const FILES = ['background.js', 'content.js', 'popup.js', 'popup.html', 'manifest.json'];
 
 const PATTERNS = [
   { re: /sk-[A-Za-z0-9_-]{20,}/g, name: 'OpenAI API key' },
