@@ -1120,6 +1120,25 @@ if (window.webSageLoaded) {
     }
 
     getChatWindowHTML() {
+      const allProviders = [
+        { value: 'openai', label: 'OpenAI' },
+        { value: 'gemini', label: 'Google Gemini' },
+        { value: 'mistral', label: 'Mistral AI' },
+        { value: 'kilo', label: 'Kilo AI' }
+      ];
+
+      const apiKeys = this.settings.apiKeys || {};
+      const configuredProviders = allProviders.filter(p => apiKeys[p.value]);
+      
+      let optionsHtml = '';
+      if (configuredProviders.length > 0) {
+        optionsHtml = configuredProviders.map(p => 
+          `<option value="${p.value}">${p.label}</option>`
+        ).join('\n              ');
+      } else {
+        optionsHtml = `<option value="">No providers configured</option>`;
+      }
+
       return `
         <div class="websage-header">
           <div class="websage-title">
@@ -1129,9 +1148,7 @@ if (window.webSageLoaded) {
           <div class="websage-performance" id="websage-performance"></div>
           <div class="websage-controls">
             <select id="websage-provider" class="websage-select">
-              <option value="openai">OpenAI</option>
-              <option value="gemini">Google Gemini</option>
-              <option value="mistral">Mistral AI</option>
+              ${optionsHtml}
             </select>
             <button id="websage-theme" class="websage-btn-icon" title="Toggle Theme">🌙</button>
             <button id="websage-analyze" class="websage-btn-icon" title="Analyze Page">🔍</button>
@@ -1851,6 +1868,27 @@ if (window.webSageLoaded) {
       }
     }
 
+    async proxyFetch(url, options) {
+      return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({
+          type: 'websage-api-fetch',
+          url,
+          options
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve({
+            ok: response.ok,
+            status: response.status,
+            text: async () => response.text,
+            json: async () => JSON.parse(response.text)
+          });
+        });
+      });
+    }
+
     async callOpenAI(message, context, apiKey) {
       const messages = [
         ...(context ? [{ role: 'system', content: `Page context: ${context}` }] : []),
@@ -1864,7 +1902,7 @@ if (window.webSageLoaded) {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          const response = await this.proxyFetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${apiKey}`,
@@ -1913,7 +1951,7 @@ if (window.webSageLoaded) {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          const response = await this.proxyFetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -1970,7 +2008,7 @@ if (window.webSageLoaded) {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+          const response = await this.proxyFetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${apiKey}`,
@@ -2023,7 +2061,7 @@ if (window.webSageLoaded) {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const response = await fetch('https://api.kilo.ai/api/gateway/chat/completions', {
+          const response = await this.proxyFetch('https://api.kilo.ai/api/gateway/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${apiKey}`,

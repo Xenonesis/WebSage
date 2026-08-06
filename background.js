@@ -22,6 +22,29 @@ class WebSageBackground {
     chrome.runtime.onInstalled.addListener(() => {
       this.initializeExtension();
     });
+
+    // Handle cross-origin API fetches from content script
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.type === 'websage-api-fetch') {
+        fetch(request.url, request.options)
+          .then(async response => {
+            const text = await response.text();
+            sendResponse({
+              ok: response.ok,
+              status: response.status,
+              text: text
+            });
+          })
+          .catch(error => {
+            sendResponse({
+              ok: false,
+              status: 0,
+              text: error.message
+            });
+          });
+        return true; // Keep channel open for async response
+      }
+    });
   }
 
   setupContextMenus() {
