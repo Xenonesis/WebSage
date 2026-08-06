@@ -934,29 +934,29 @@
   position: fixed;
   bottom: 30px;
   right: 30px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #18181b;
+  color: #ededed;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  transition: all 0.3s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 2147483646;
 }
 
 .websage-fab:hover {
-  transform: scale(1.1) rotate(90deg);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  background: #27272a;
 }
 
 .websage-fab:active {
-  transform: scale(0.95);
+  transform: translateY(0);
 }
 
 /* Tooltip styles */
