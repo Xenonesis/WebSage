@@ -660,6 +660,7 @@ Text to analyze: "${text.substring(0, 2000)}"`;
       this.floatingActionButton.className = 'websage-fab';
       this.floatingActionButton.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
       this.floatingActionButton.title = 'Open WebSage Chat';
+      this.floatingActionButton.setAttribute('aria-label', 'Open WebSage chat');
       this.floatingActionButton.setAttribute('data-tooltip', 'Open WebSage Chat');
 
       document.body.appendChild(this.floatingActionButton);
@@ -698,6 +699,8 @@ Text to analyze: "${text.substring(0, 2000)}"`;
       // Create notification container
       const notificationContainer = document.createElement('div');
       notificationContainer.id = 'websage-notifications';
+      notificationContainer.setAttribute('aria-live', 'polite');
+      notificationContainer.setAttribute('aria-atomic', 'false');
       notificationContainer.style.cssText = `
         position: fixed;
         top: 20px;
@@ -728,7 +731,7 @@ Text to analyze: "${text.substring(0, 2000)}"`;
         font-weight: 500;
         opacity: 0;
         transform: translateY(-20px);
-        transition: all 0.3s ease;
+        transition: opacity 0.3s ease, transform 0.3s ease;
         pointer-events: auto;
         max-width: 320px;
         word-wrap: break-word;
@@ -786,7 +789,7 @@ Text to analyze: "${text.substring(0, 2000)}"`;
           <div class="websage-analysis-results">
             <div class="websage-analysis-header">
               <h3>${title}</h3>
-              <button class="websage-analysis-close" title="Close">✕</button>
+              <button class="websage-analysis-close" type="button" aria-label="Close analysis" title="Close">✕</button>
             </div>
             ${content}
           </div>
@@ -916,7 +919,7 @@ Text to analyze: "${text.substring(0, 2000)}"`;
           <div class="websage-analysis-results">
             <div class="websage-analysis-header">
               <h3>🏆 Page Credibility Assessment</h3>
-              <button class="websage-analysis-close" title="Close">✕</button>
+              <button class="websage-analysis-close" type="button" aria-label="Close analysis" title="Close">✕</button>
             </div>
             
             <div class="websage-analysis-section">
@@ -1087,6 +1090,7 @@ Text to analyze: "${text.substring(0, 2000)}"`;
         
         themeBtn.innerHTML = icon;
         themeBtn.title = title;
+        themeBtn.setAttribute('aria-label', title);
       }
     }
 
@@ -1117,32 +1121,34 @@ Text to analyze: "${text.substring(0, 2000)}"`;
           </div>
           <div class="websage-performance" id="websage-performance"></div>
           <div class="websage-controls">
-            <select id="websage-provider" class="websage-select">
+            <select id="websage-provider" class="websage-select" aria-label="AI provider">
               ${optionsHtml}
             </select>
-            <button id="websage-theme" class="websage-btn-icon" title="Toggle Theme"></button>
-            <button id="websage-analyze" class="websage-btn-icon" title="Analyze Page">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <button id="websage-theme" class="websage-btn-icon" type="button" aria-label="Toggle theme" title="Toggle theme"></button>
+            <button id="websage-analyze" class="websage-btn-icon" type="button" aria-label="Analyze page" title="Analyze page">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </button>
-            <button id="websage-clear" class="websage-btn-icon" title="Clear Chat">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            <button id="websage-clear" class="websage-btn-icon" type="button" aria-label="Clear conversation" title="Clear conversation">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </button>
-            <button id="websage-close" class="websage-btn-icon" title="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <button id="websage-close" class="websage-btn-icon" type="button" aria-label="Close WebSage chat" title="Close WebSage chat">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
           </div>
         </div>
         <div class="websage-analysis" id="websage-analysis" style="display: none;"></div>
         <div class="websage-messages" id="websage-messages"></div>
         <div class="websage-input-container">
+          <label class="websage-visually-hidden" for="websage-input">Ask WebSage about this page</label>
           <textarea 
             id="websage-input" 
+            name="websage-input"
             placeholder="Ask me anything about this page..."
             rows="1"
           ></textarea>
           <button id="websage-send" class="websage-btn-send">Send</button>
         </div>
-        <div class="websage-status" id="websage-status"></div>
+        <div class="websage-status" id="websage-status" aria-live="polite" aria-atomic="true"></div>
       `;
     }
 
@@ -1365,7 +1371,7 @@ Text to analyze: "${text.substring(0, 2000)}"`;
       
       messageDiv.innerHTML = `
         <div class="websage-message-content">${this.formatMessage(content)}</div>
-        ${role === 'assistant' ? `<button class="websage-copy-btn" title="Copy">${COPY_ICON_SVG}</button>` : ''}
+        ${role === 'assistant' ? `<button class="websage-copy-btn" type="button" aria-label="Copy response" title="Copy response">${COPY_ICON_SVG}</button>` : ''}
         <div class="websage-message-time">${timestamp}</div>
       `;
 
@@ -1429,6 +1435,7 @@ Text to analyze: "${text.substring(0, 2000)}"`;
     }
 
     clearChat() {
+      if (!window.confirm('Clear this page’s WebSage conversation? This cannot be undone.')) return;
       const messagesContainer = this.chatWindow.querySelector('#websage-messages');
       messagesContainer.innerHTML = '';
       this.chatHistory = [];

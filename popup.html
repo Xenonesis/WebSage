@@ -1,634 +1,466 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f7f5">
+  <title>WebSage settings</title>
   <style>
+    :root {
+      color-scheme: light;
+      --canvas: #f7f7f5;
+      --surface: #ffffff;
+      --surface-muted: #f1f2ef;
+      --ink: #1d211d;
+      --ink-muted: #656b64;
+      --line: #dde0db;
+      --line-strong: #bfc5bb;
+      --brand: #35624d;
+      --brand-strong: #254a39;
+      --brand-soft: #e7f0e9;
+      --error: #9f2f2f;
+      --error-soft: #fbeaea;
+      --info: #275f87;
+      --info-soft: #e8f3fa;
+      --shadow: 0 12px 30px rgba(28, 34, 27, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; }
+
     body {
-      width: 380px;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      margin: 0;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 25px;
-      padding: 15px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 12px;
-      color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .logo {
-      font-size: 28px;
-      margin-bottom: 8px;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .version {
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 12px;
-      margin-top: 5px;
-    }
-
-    .section {
-      margin-bottom: 25px;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-      transition: all 0.3s ease;
-    }
-
-    .section:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    .section h3 {
-      margin: 0 0 15px 0;
-      font-size: 16px;
-      color: #2d3748;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .section h3::before {
-      content: '';
-      width: 4px;
-      height: 16px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 2px;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      color: #4a5568;
-    }
-
-    select,
-    input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 13px;
-      box-sizing: border-box;
-      transition: all 0.2s;
-    }
-
-    select:focus,
-    input:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    input[type="password"] {
-      font-family: monospace;
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-      background: #f7fafc;
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-
-    .checkbox-group:hover {
-      background: #edf2f7;
-    }
-
-    .checkbox-group input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
-    .checkbox-group label {
-      margin: 0;
-      cursor: pointer;
-      flex: 1;
-    }
-
-    .btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      cursor: pointer;
+      width: 392px;
+      max-height: 600px;
+      overflow-y: auto;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 14px;
-      font-weight: 600;
-      width: 100%;
-      margin-top: 10px;
-      transition: all 0.3s;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-      position: relative;
-      overflow: hidden;
+      line-height: 1.45;
     }
 
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
+    button, input, select { font: inherit; }
 
-    .btn:hover::before {
-      left: 100%;
-    }
+    button { touch-action: manipulation; }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    }
+    .app-shell { padding: 18px; }
 
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .btn-secondary {
-      background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
-      box-shadow: 0 4px 15px rgba(113, 128, 150, 0.3);
-    }
-
-    .btn-secondary:hover {
-      box-shadow: 0 6px 20px rgba(113, 128, 150, 0.4);
-    }
-
-    .status {
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-top: 15px;
-      text-align: center;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-
-    .status.success {
-      background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
-      color: #22543d;
-      border: 1px solid #9ae6b4;
-    }
-
-    .status.error {
-      background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%);
-      color: #742a2a;
-      border: 1px solid #fc8181;
-    }
-
-    .status.info {
-      background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
-      color: #2a4365;
-      border: 1px solid #90cdf4;
-    }
-
-    .shortcut {
-      background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
-      padding: 15px;
-      border-radius: 8px;
-      font-size: 12px;
-      color: #234e52;
-      text-align: center;
-      border: 1px solid #81e6d9;
-      margin-top: 20px;
-    }
-
-    .shortcut kbd {
-      background: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid #cbd5e0;
-      font-family: monospace;
-      font-size: 11px;
-      margin: 0 2px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .api-key-input {
-      position: relative;
-    }
-
-    .api-key-toggle {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      opacity: 0.7;
-      transition: opacity 0.2s;
-      padding: 4px;
-    }
-
-    .api-key-toggle:hover {
-      opacity: 1;
-      background: rgba(0, 0, 0, 0.05);
-      border-radius: 4px;
-    }
-
-    .section:nth-child(6) {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin: 20px 0;
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .section:nth-child(6) h3 {
-      color: white;
-      margin-bottom: 18px;
-    }
-
-    .section:nth-child(6) label {
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .nlp-feature {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: all 0.2s;
-    }
-
-    .nlp-feature:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-1px);
-    }
-
-    .nlp-feature-title {
-      font-weight: 600;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nlp-feature-desc {
-      font-size: 12px;
-      opacity: 0.8;
-      line-height: 1.4;
-    }
-
-    .feature-icon {
-      width: 20px;
-      height: 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-    }
-
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-      margin: 25px 0;
-    }
-
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .quick-action {
-      background: #f7fafc;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 12px;
-      font-weight: 500;
-      color: #4a5568;
-    }
-
-    .quick-action:hover {
-      background: #edf2f7;
-      border-color: #cbd5e0;
-      transform: translateY(-1px);
-    }
-
-    .quick-action-icon {
-      font-size: 20px;
-      margin-bottom: 4px;
-      display: block;
-    }
-
-    .loading {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top: 2px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes float {
-
-      0%,
-      100% {
-        transform: translateY(0px);
-      }
-
-      50% {
-        transform: translateY(-3px);
-      }
-    }
-
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 48px;
-      height: 24px;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #cbd5e0;
-      transition: .4s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    input:checked+.slider {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    input:checked+.slider:before {
-      transform: translateX(24px);
-    }
-
-    .toggle-container {
+    .app-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 0;
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
-    .toggle-label {
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 750;
+      letter-spacing: -0.08em;
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 720;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-copy p { margin: 1px 0 0; color: var(--ink-muted); font-size: 12px; }
+
+    .connection-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 145px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink-muted);
+      font-size: 11px;
+      font-weight: 650;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .connection-state::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--line-strong);
+      content: "";
+      flex: 0 0 auto;
+    }
+
+    .connection-state.connected { color: var(--brand-strong); background: var(--brand-soft); border-color: #bdd3c3; }
+    .connection-state.connected::before { background: var(--brand); }
+    .connection-state.error { color: var(--error); background: var(--error-soft); border-color: #efc5c5; }
+    .connection-state.error::before { background: var(--error); }
+    .connection-state.testing { color: var(--info); background: var(--info-soft); border-color: #b9d8ea; }
+    .connection-state.testing::before { background: var(--info); animation: pulse 1.25s ease-in-out infinite; }
+
+    .panel {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel + .panel, details + details, .panel + details { margin-top: 12px; }
+
+    .panel-heading { margin: 0 0 14px; }
+    .panel-heading h2 { margin: 0; font-size: 15px; letter-spacing: -0.015em; }
+    .panel-heading p { margin: 3px 0 0; color: var(--ink-muted); font-size: 12px; }
+
+    .field { display: grid; gap: 6px; }
+    .field + .field { margin-top: 13px; }
+
+    label, .field-label { color: var(--ink); font-size: 12px; font-weight: 650; }
+
+    .field-hint { margin: 0; color: var(--ink-muted); font-size: 11px; }
+
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      padding: 9px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    input::placeholder { color: #8a9089; }
+    select:disabled { color: var(--ink-muted); background: var(--surface-muted); cursor: not-allowed; }
+
+    .input-with-action { position: relative; }
+    .input-with-action input { padding-right: 43px; }
+
+    .icon-button {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--ink-muted);
+      cursor: pointer;
+    }
+
+    .input-with-action .icon-button { position: absolute; top: 4px; right: 4px; }
+    .icon-button:hover { background: var(--surface-muted); color: var(--ink); }
+
+    .eye-icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+
+    .actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 16px; }
+
+    .button {
+      display: inline-flex;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 12px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
       font-size: 13px;
-      color: #4a5568;
-      font-weight: 500;
+      font-weight: 680;
+      transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .button:active { transform: translateY(1px); }
+    .button-primary { background: var(--brand); color: #fff; box-shadow: 0 4px 10px rgba(53, 98, 77, 0.22); }
+    .button-primary:hover { background: var(--brand-strong); }
+    .button-secondary { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+    .button-secondary:hover { background: var(--surface-muted); border-color: #aeb5ac; }
+    .button-quiet { min-height: 32px; padding: 6px 9px; background: transparent; color: var(--ink-muted); border-color: transparent; }
+    .button-quiet:hover { background: var(--surface-muted); color: var(--ink); }
+    .button-danger { color: var(--error); }
+    .button-danger:hover { background: var(--error-soft); }
+    .button:disabled { cursor: wait; opacity: 0.62; transform: none; }
+
+    .button-spinner {
+      width: 13px;
+      height: 13px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    .model-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+    .model-row .field { min-width: 0; }
+
+    .status {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 11px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .status[aria-hidden="false"] { display: block; }
+    .status.success { color: var(--brand-strong); background: var(--brand-soft); border-color: #bdd3c3; }
+    .status.error { color: var(--error); background: var(--error-soft); border-color: #efc5c5; }
+    .status.info { color: var(--info); background: var(--info-soft); border-color: #b9d8ea; }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 14px;
+      cursor: pointer;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 680;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after { color: var(--ink-muted); content: "+"; font-size: 17px; font-weight: 400; }
+    details[open] summary { border-bottom: 1px solid var(--line); }
+    details[open] summary::after { content: "−"; }
+
+    .details-content { padding: 14px; }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+    }
+
+    .toggle-row + .toggle-row { border-top: 1px solid var(--line); }
+    .toggle-copy { display: grid; gap: 2px; }
+    .toggle-copy label { cursor: pointer; }
+    .toggle-copy p { margin: 0; color: var(--ink-muted); font-size: 11px; }
+
+    .switch { display: inline-flex; flex: 0 0 auto; align-items: center; }
+    .switch input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; }
+    .switch-track {
+      position: relative;
+      display: block;
+      width: 38px;
+      height: 22px;
+      border-radius: 999px;
+      background: #c6cbc5;
+      transition: background-color 160ms ease;
+    }
+    .switch-track::before {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+      content: "";
+      transition: transform 160ms ease;
+    }
+    .switch input:checked + .switch-track { background: var(--brand); }
+    .switch input:checked + .switch-track::before { transform: translateX(16px); }
+
+    .privacy-copy { margin: 0; color: var(--ink-muted); font-size: 12px; }
+    .shortcut { margin: 14px 0 0; color: var(--ink-muted); font-size: 11px; text-align: center; }
+    kbd { padding: 1px 4px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; background: var(--surface); color: var(--ink); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+    .dialog { max-width: 340px; padding: 0; border: 0; border-radius: 14px; color: var(--ink); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24); }
+    .dialog::backdrop { background: rgba(20, 25, 20, 0.36); }
+    .dialog-content { padding: 18px; }
+    .dialog h2 { margin: 0; font-size: 16px; letter-spacing: -0.02em; }
+    .dialog p { margin: 7px 0 0; color: var(--ink-muted); font-size: 13px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+    :where(button, input, select, summary):focus-visible {
+      outline: 3px solid rgba(53, 98, 77, 0.4);
+      outline-offset: 2px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 50% { opacity: 0.38; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
 
 <body>
-  <div class="header">
-    <div class="logo">🧠</div>
-    <h1>WebSage</h1>
-    <div class="version">v4.0.0 - Enhanced UI/UX</div>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">W</div>
+        <div class="brand-copy">
+          <h1>WebSage</h1>
+          <p>AI assistance for the page you’re on</p>
+        </div>
+      </div>
+      <span id="connectionState" class="connection-state">Setup required</span>
+    </header>
+
+    <main id="popup-main">
+      <section class="panel" aria-labelledby="connection-heading">
+        <div class="panel-heading">
+          <h2 id="connection-heading">Connect a provider</h2>
+          <p>Add a key, choose a model, then verify the connection.</p>
+        </div>
+
+        <div class="field">
+          <label for="provider">Provider</label>
+          <select id="provider" name="provider">
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="mistral">Mistral AI</option>
+            <option value="kilo">Kilo AI</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="apiKey">API key</label>
+          <div class="input-with-action">
+            <input id="apiKey" name="apiKey" type="password" autocomplete="new-password" spellcheck="false" placeholder="Paste your API key">
+            <button type="button" class="icon-button" id="toggleApiKey" aria-label="Show API key" aria-pressed="false">
+              <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+            </button>
+          </div>
+          <p class="field-hint">Saved only in this browser’s extension storage.</p>
+        </div>
+
+        <div class="model-row">
+          <div class="field">
+            <label for="model">Model</label>
+            <select id="model" name="model" disabled>
+              <option value="">Load models after adding your key</option>
+            </select>
+          </div>
+          <button type="button" class="button button-secondary" id="loadModels">Load models</button>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="button button-primary" id="saveSettings">Save settings</button>
+          <button type="button" class="button button-secondary" id="testConnection">Test connection</button>
+        </div>
+
+        <div id="status" class="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></div>
+      </section>
+
+      <details>
+        <summary>Page context &amp; memory</summary>
+        <div class="details-content">
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="contextEnabled">Use page context</label><p>Include relevant page content with your request.</p></div>
+            <label class="switch"><input type="checkbox" id="contextEnabled" name="contextEnabled"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="memoryEnabled">Remember page conversations</label><p>Keep each page’s chat history locally.</p></div>
+            <label class="switch"><input type="checkbox" id="memoryEnabled" name="memoryEnabled"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+          <div class="field">
+            <label for="contextMode">Context detail</label>
+            <select id="contextMode" name="contextMode">
+              <option value="intelligent">Intelligent selection</option>
+              <option value="full">Full page content</option>
+              <option value="minimal">Minimal context</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="maxTokens">Context limit</label>
+            <select id="maxTokens" name="maxTokens">
+              <option value="1000">1,000 tokens — Fast</option>
+              <option value="1500">1,500 tokens — Balanced</option>
+              <option value="2000">2,000 tokens — Detailed</option>
+              <option value="3000">3,000 tokens — Maximum</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Experience &amp; analysis</summary>
+        <div class="details-content">
+          <div class="field">
+            <label for="theme">Theme</label>
+            <select id="theme" name="theme">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="auto">Use system setting</option>
+            </select>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="animationsEnabled">Use animations</label><p>Respect your device’s reduced-motion preference.</p></div>
+            <label class="switch"><input type="checkbox" id="animationsEnabled" name="animationsEnabled"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="notificationsEnabled">Show in-page notifications</label><p>Confirm WebSage actions while you browse.</p></div>
+            <label class="switch"><input type="checkbox" id="notificationsEnabled" name="notificationsEnabled"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="nlpEnabled">Enable local analysis</label><p>Turn on sentiment, intent, and conversation insights.</p></div>
+            <label class="switch"><input type="checkbox" id="nlpEnabled" name="nlpEnabled"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="sentimentAnalysis">Sentiment analysis</label></div>
+            <label class="switch"><input type="checkbox" id="sentimentAnalysis" name="sentimentAnalysis"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="intentClassification">Intent classification</label></div>
+            <label class="switch"><input type="checkbox" id="intentClassification" name="intentClassification"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-copy"><label for="conversationInsights">Conversation insights</label></div>
+            <label class="switch"><input type="checkbox" id="conversationInsights" name="conversationInsights"><span class="switch-track" aria-hidden="true"></span></label>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Privacy &amp; reset</summary>
+        <div class="details-content">
+          <p class="privacy-copy">WebSage stores settings and optional conversation history in your browser. When page context is enabled, it is sent only to the AI provider you select.</p>
+          <button type="button" class="button button-quiet button-danger" id="quickReset">Reset settings to defaults</button>
+        </div>
+      </details>
+
+      <p class="shortcut">Press <kbd>Alt</kbd> + <kbd>W</kbd> on a page to open WebSage.</p>
+    </main>
   </div>
 
-  <div class="section">
-    <h3>AI Provider</h3>
-    <div class="form-group">
-      <label for="provider">Choose Provider:</label>
-      <select id="provider">
-        <option value="openai">OpenAI</option>
-        <option value="gemini">Google Gemini</option>
-        <option value="mistral">Mistral AI</option>
-        <option value="kilo">Kilo AI</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="model">Model:</label>
-      <select id="model">
-        <option value="">Enter API key to load models</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>API Keys</h3>
-    <div class="form-group">
-      <label for="apiKey">API Key:</label>
-      <div class="api-key-input">
-        <input type="password" id="apiKey" placeholder="Enter your API key">
-        <button type="button" class="api-key-toggle" id="toggleApiKey">👁️</button>
+  <dialog id="resetDialog" class="dialog" aria-labelledby="reset-title">
+    <div class="dialog-content">
+      <h2 id="reset-title">Reset settings?</h2>
+      <p>This restores defaults but keeps your saved API keys.</p>
+      <div class="dialog-actions">
+        <button type="button" class="button button-secondary" id="cancelReset">Cancel</button>
+        <button type="button" class="button button-primary" id="confirmReset">Reset settings</button>
       </div>
     </div>
-  </div>
-
-  <div class="section">
-    <h3>Settings</h3>
-    <div class="toggle-container">
-      <span class="toggle-label">Enable intelligent page context</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="contextEnabled" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="toggle-container">
-      <span class="toggle-label">Remember conversations per page</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="memoryEnabled" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="form-group">
-      <label for="contextMode">Context Processing:</label>
-      <select id="contextMode">
-        <option value="intelligent">Intelligent (Recommended)</option>
-        <option value="full">Full Page Content</option>
-        <option value="minimal">Minimal Context</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="theme">Theme:</label>
-      <select id="theme">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="auto">Auto (System)</option>
-      </select>
-    </div>
-
-    <div class="toggle-container">
-      <span class="toggle-label">Enable animations</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="animationsEnabled" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="toggle-container">
-      <span class="toggle-label">Enable notifications</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="notificationsEnabled" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>NLP Features</h3>
-    <div class="toggle-container">
-      <span class="toggle-label">Enable NLP processing</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="nlpEnabled" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="nlp-feature">
-      <div class="nlp-feature-title">
-        <span class="feature-icon">😊</span>
-        Sentiment Analysis
-      </div>
-      <div class="nlp-feature-desc">Detect emotional tone and sentiment in text</div>
-      <div class="toggle-container" style="margin-top: 8px;">
-        <span class="toggle-label" style="font-size: 11px;">Enabled</span>
-        <label class="toggle-switch" style="transform: scale(0.8);">
-          <input type="checkbox" id="sentimentAnalysis" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
-
-    <div class="nlp-feature">
-      <div class="nlp-feature-title">
-        <span class="feature-icon">🎯</span>
-        Intent Classification
-      </div>
-      <div class="nlp-feature-desc">Understand user's intent behind messages</div>
-      <div class="toggle-container" style="margin-top: 8px;">
-        <span class="toggle-label" style="font-size: 11px;">Enabled</span>
-        <label class="toggle-switch" style="transform: scale(0.8);">
-          <input type="checkbox" id="intentClassification" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
-
-    <div class="nlp-feature">
-      <div class="nlp-feature-title">
-        <span class="feature-icon">💡</span>
-        Conversation Insights
-      </div>
-      <div class="nlp-feature-desc">Track conversation patterns and preferences</div>
-      <div class="toggle-container" style="margin-top: 8px;">
-        <span class="toggle-label" style="font-size: 11px;">Enabled</span>
-        <label class="toggle-switch" style="transform: scale(0.8);">
-          <input type="checkbox" id="conversationInsights" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>Performance</h3>
-    <div class="form-group">
-      <label for="maxTokens">Max Context Tokens:</label>
-      <select id="maxTokens">
-        <option value="1000">1000 (Fast)</option>
-        <option value="1500" selected>1500 (Balanced)</option>
-        <option value="2000">2000 (Detailed)</option>
-        <option value="3000">3000 (Maximum)</option>
-      </select>
-    </div>
-
-    <div class="quick-actions">
-      <div class="quick-action" id="quickTest">
-        <span class="quick-action-icon">🔍</span>
-        Test Connection
-      </div>
-      <div class="quick-action" id="quickReset">
-        <span class="quick-action-icon">🔄</span>
-        Reset Settings
-      </div>
-    </div>
-  </div>
-
-  <button class="btn" id="saveSettings">
-    <span id="saveText">Save Settings</span>
-  </button>
-  <button class="btn btn-secondary" id="testConnection">Test Connection</button>
-
-  <div class="shortcut">
-    Press <kbd>Altkbd> + <kbd>W</kbd> to toggle WebSage on any page
-  </div>
-
-  <div id="status" class="status" style="display: none;"></div>
+  </dialog>
 
   <script src="popup.js"></script>
 </body>

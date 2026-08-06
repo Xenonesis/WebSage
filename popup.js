@@ -1,9 +1,27 @@
-// WebSage Popup Script
+// WebSage settings popup. Settings are shared with the content script through
+// chrome.storage.local, so existing installations retain their configuration.
+const DEFAULT_SETTINGS = {
+  provider: 'openai',
+  model: 'gpt-5.6-sol',
+  contextEnabled: true,
+  memoryEnabled: true,
+  contextMode: 'intelligent',
+  maxTokens: 1500,
+  theme: 'light',
+  nlpEnabled: true,
+  sentimentAnalysis: true,
+  intentClassification: true,
+  conversationInsights: true,
+  animationsEnabled: true,
+  notificationsEnabled: true,
+  apiKeys: {}
+};
+
 class WebSagePopup {
   constructor() {
     this.settings = {};
-    this._modelsToken = 0;
-    this._modelsDebounce = null;
+    this.modelsToken = 0;
+    this.statusTimer = null;
     this.init();
   }
 
@@ -14,196 +32,181 @@ class WebSagePopup {
   }
 
   async loadSettings() {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['webSageSettings'], (result) => {
-        this.settings = result.webSageSettings || {
-          provider: 'openai',
-          model: 'gpt-5.6-sol',
-          contextEnabled: true,
-          memoryEnabled: true,
-          contextMode: 'intelligent',
-          maxTokens: 1500,
-          theme: 'light',
-          nlpEnabled: true,
-          sentimentAnalysis: true,
-          intentClassification: true,
-          conversationInsights: true,
-          animationsEnabled: true,
-          notificationsEnabled: true,
-          apiKeys: {}
-        };
-        resolve();
-      });
-    });
+    const { webSageSettings: savedSettings = {} } = await chrome.storage.local.get('webSageSettings');
+    this.settings = {
+      ...DEFAULT_SETTINGS,
+      ...savedSettings,
+      apiKeys: { ...(savedSettings.apiKeys || {}) }
+    };
   }
 
   setupUI() {
-    // Set current values with null checks
-    const provider = document.getElementById('provider');
-    if (provider) provider.value = this.settings.provider;
-    
-    const contextEnabled = document.getElementById('contextEnabled');
-    if (contextEnabled) contextEnabled.checked = this.settings.contextEnabled;
-    
-    const memoryEnabled = document.getElementById('memoryEnabled');
-    if (memoryEnabled) memoryEnabled.checked = this.settings.memoryEnabled;
-    
-    const contextMode = document.getElementById('contextMode');
-    if (contextMode) contextMode.value = this.settings.contextMode;
-    
-    const maxTokens = document.getElementById('maxTokens');
-    if (maxTokens) maxTokens.value = this.settings.maxTokens;
-    
-    const theme = document.getElementById('theme');
-    if (theme) theme.value = this.settings.theme;
-    
-    // Set NLP settings
-    const nlpEnabled = document.getElementById('nlpEnabled');
-    if (nlpEnabled) nlpEnabled.checked = this.settings.nlpEnabled;
-    
-    const sentimentAnalysis = document.getElementById('sentimentAnalysis');
-    if (sentimentAnalysis) sentimentAnalysis.checked = this.settings.sentimentAnalysis;
-    
-    const intentClassification = document.getElementById('intentClassification');
-    if (intentClassification) intentClassification.checked = this.settings.intentClassification;
-    
-    const conversationInsights = document.getElementById('conversationInsights');
-    if (conversationInsights) conversationInsights.checked = this.settings.conversationInsights;
-    
-    // Set UI settings
-    const animationsEnabled = document.getElementById('animationsEnabled');
-    if (animationsEnabled) animationsEnabled.checked = this.settings.animationsEnabled;
-    
-    const notificationsEnabled = document.getElementById('notificationsEnabled');
-    if (notificationsEnabled) notificationsEnabled.checked = this.settings.notificationsEnabled;
-    
-    // Set API key for current provider
-    const apiKey = this.settings.apiKeys[this.settings.provider] || '';
+    this.setValue('provider', this.settings.provider);
+    this.setValue('contextMode', this.settings.contextMode);
+    this.setValue('maxTokens', this.settings.maxTokens);
+    this.setValue('theme', this.settings.theme);
+
+    [
+      'contextEnabled',
+      'memoryEnabled',
+      'nlpEnabled',
+      'sentimentAnalysis',
+      'intentClassification',
+      'conversationInsights',
+      'animationsEnabled',
+      'notificationsEnabled'
+    ].forEach((id) => this.setChecked(id, this.settings[id]));
+
     const apiKeyInput = document.getElementById('apiKey');
-    if (apiKeyInput) apiKeyInput.value = apiKey;
-    
-    // Fetch model options live from the provider using the API key
-    this.loadModels();
+    if (apiKeyInput) apiKeyInput.value = this.settings.apiKeys[this.settings.provider] || '';
+
+    this.setModelPlaceholder('Load models after adding your key');
+    this.updateConnectionState();
   }
 
   setupEventListeners() {
-    // Provider change
-    const provider = document.getElementById('provider');
-    if (provider) {
-      provider.addEventListener('change', (e) => {
-        this.settings.provider = e.target.value;
-        this.updateApiKeyField();
-        this.loadModels();
-      });
-    }
+    document.getElementById('provider')?.addEventListener('change', (event) => {
+      this.settings.provider = event.target.value;
+      this.updateApiKeyField();
+      this.setModelPlaceholder('Load models for this provider');
+      this.updateConnectionState();
+    });
 
-    // API key toggle visibility
-    const toggleApiKey = document.getElementById('toggleApiKey');
-    if (toggleApiKey) {
-      toggleApiKey.addEventListener('click', () => {
-        const apiKeyInput = document.getElementById('apiKey');
-        const toggleBtn = document.getElementById('toggleApiKey');
-        
-        if (apiKeyInput && toggleBtn) {
-          if (apiKeyInput.type === 'password') {
-            apiKeyInput.type = 'text';
-            toggleBtn.textContent = '🙈';
-          } else {
-            apiKeyInput.type = 'password';
-            toggleBtn.textContent = '👁️';
-          }
-        }
-      });
-    }
+    document.getElementById('apiKey')?.addEventListener('input', () => {
+      this.setModelPlaceholder('Load models after updating your key');
+      this.updateConnectionState();
+    });
 
-    // Reload the model list live as the user types/edits the API key
-    const apiKeyInput = document.getElementById('apiKey');
-    if (apiKeyInput) {
-      apiKeyInput.addEventListener('input', () => {
-        clearTimeout(this._modelsDebounce);
-        this._modelsDebounce = setTimeout(() => this.loadModels(), 400);
-      });
-    }
-
-    // Save settings
-    const saveSettings = document.getElementById('saveSettings');
-    if (saveSettings) {
-      saveSettings.addEventListener('click', () => {
-        this.saveSettings();
-      });
-    }
-
-    // Test connection
-    const testConnection = document.getElementById('testConnection');
-    if (testConnection) {
-      testConnection.addEventListener('click', () => {
-        this.testConnection();
-      });
-    }
-
-    // Quick test button
-    const quickTest = document.getElementById('quickTest');
-    if (quickTest) {
-      quickTest.addEventListener('click', () => {
-        this.testConnection();
-      });
-    }
-
-    // Quick reset button
-    const quickReset = document.getElementById('quickReset');
-    if (quickReset) {
-      quickReset.addEventListener('click', () => {
-        this.resetSettings();
-      });
-    }
+    document.getElementById('toggleApiKey')?.addEventListener('click', () => this.toggleApiKeyVisibility());
+    document.getElementById('loadModels')?.addEventListener('click', () => this.loadModels());
+    document.getElementById('saveSettings')?.addEventListener('click', () => this.saveSettings());
+    document.getElementById('testConnection')?.addEventListener('click', () => this.testConnection());
+    document.getElementById('quickReset')?.addEventListener('click', () => this.openResetDialog());
+    document.getElementById('cancelReset')?.addEventListener('click', () => document.getElementById('resetDialog')?.close());
+    document.getElementById('confirmReset')?.addEventListener('click', () => this.resetSettings());
   }
 
-  async loadModels() {
+  setValue(id, value) {
+    const element = document.getElementById(id);
+    if (element && value !== undefined && value !== null) element.value = String(value);
+  }
+
+  setChecked(id, checked) {
+    const element = document.getElementById(id);
+    if (element) element.checked = Boolean(checked);
+  }
+
+  toggleApiKeyVisibility() {
+    const apiKeyInput = document.getElementById('apiKey');
+    const toggleButton = document.getElementById('toggleApiKey');
+    if (!apiKeyInput || !toggleButton) return;
+
+    const isVisible = apiKeyInput.type === 'text';
+    apiKeyInput.type = isVisible ? 'password' : 'text';
+    toggleButton.setAttribute('aria-pressed', String(!isVisible));
+    toggleButton.setAttribute('aria-label', isVisible ? 'Show API key' : 'Hide API key');
+  }
+
+  setModelPlaceholder(text) {
     const modelSelect = document.getElementById('model');
     if (!modelSelect) return;
 
-    const provider = this.settings.provider;
-    const apiKeyInput = document.getElementById('apiKey');
-    // Prefer the key currently in the field (may be freshly typed, not yet saved)
-    const apiKey = (apiKeyInput && apiKeyInput.value.trim()) || this.settings.apiKeys[provider] || '';
-    const storedModel = this.settings.model;
-    const token = ++this._modelsToken;
+    modelSelect.replaceChildren();
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = text;
+    modelSelect.appendChild(option);
+    modelSelect.disabled = true;
+  }
 
-    const setPlaceholder = (text) => {
-      modelSelect.innerHTML = '';
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = text;
-      modelSelect.appendChild(option);
-    };
+  getFormProvider() {
+    return document.getElementById('provider')?.value || this.settings.provider;
+  }
+
+  getFormApiKey() {
+    return document.getElementById('apiKey')?.value.trim() || '';
+  }
+
+  collectSettingsFromForm() {
+    const provider = this.getFormProvider();
+    this.settings.provider = provider;
+
+    const model = document.getElementById('model');
+    if (model?.value) this.settings.model = model.value;
+
+    ['contextEnabled', 'memoryEnabled', 'nlpEnabled', 'sentimentAnalysis', 'intentClassification', 'conversationInsights', 'animationsEnabled', 'notificationsEnabled'].forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) this.settings[id] = element.checked;
+    });
+
+    ['contextMode', 'theme'].forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) this.settings[id] = element.value;
+    });
+
+    const maxTokens = Number.parseInt(document.getElementById('maxTokens')?.value || '', 10);
+    if (!Number.isInteger(maxTokens) || maxTokens <= 0) {
+      throw new Error('Choose a valid context limit.');
+    }
+    this.settings.maxTokens = maxTokens;
+
+    const apiKey = this.getFormApiKey();
+    if (apiKey) this.settings.apiKeys[provider] = apiKey;
+    else delete this.settings.apiKeys[provider];
+  }
+
+  updateApiKeyField() {
+    const apiKeyInput = document.getElementById('apiKey');
+    if (apiKeyInput) apiKeyInput.value = this.settings.apiKeys[this.settings.provider] || '';
+  }
+
+  async loadModels() {
+    const provider = this.getFormProvider();
+    const apiKey = this.getFormApiKey();
+    const loadButton = document.getElementById('loadModels');
+    const modelSelect = document.getElementById('model');
+    const requestToken = ++this.modelsToken;
 
     if (!apiKey) {
-      setPlaceholder('Enter API key to load models');
+      this.showStatus('Add an API key before loading models.', 'error');
+      document.getElementById('apiKey')?.focus();
       return;
     }
 
-    setPlaceholder('Loading models...');
+    this.settings.provider = provider;
+    this.setButtonBusy(loadButton, true, 'Loading…');
+    this.setModelPlaceholder('Loading models…');
+    this.setConnectionState('testing', 'Loading models');
+
     try {
       const models = await this.fetchModels(provider, apiKey);
-      if (token !== this._modelsToken) return; // superseded by a newer request
+      if (requestToken !== this.modelsToken || !modelSelect) return;
 
-      modelSelect.innerHTML = '';
+      modelSelect.replaceChildren();
       if (models.length === 0) {
-        setPlaceholder('No models available for this key');
+        this.setModelPlaceholder('No compatible models were found');
+        this.showStatus('No compatible chat models were returned for this key.', 'error');
+        this.setConnectionState('error', 'No models found');
         return;
       }
+
       models.forEach((id) => {
         const option = document.createElement('option');
         option.value = id;
         option.textContent = id;
         modelSelect.appendChild(option);
       });
-      // Keep the stored model when still offered, else default to the first
-      modelSelect.value = models.includes(storedModel) ? storedModel : models[0];
+      modelSelect.disabled = false;
+      modelSelect.value = models.includes(this.settings.model) ? this.settings.model : models[0];
+      this.showStatus(`${models.length} models loaded. Choose one, then save your settings.`, 'success');
+      this.setConnectionState('connected', `${this.getProviderLabel()} models ready`);
     } catch (error) {
-      if (token !== this._modelsToken) return;
-      setPlaceholder('Failed to load models');
-      this.showStatus(`Failed to load models: ${error.message}`, 'error');
+      if (requestToken !== this.modelsToken) return;
+      this.setModelPlaceholder('Could not load models');
+      this.showStatus(this.getRequestError('Could not load models', error), 'error');
+      this.setConnectionState('error', 'Model lookup failed');
+    } finally {
+      if (requestToken === this.modelsToken) this.setButtonBusy(loadButton, false);
     }
   }
 
@@ -211,254 +214,165 @@ class WebSagePopup {
     let response;
     switch (provider) {
       case 'openai':
-        response = await fetch('https://api.openai.com/v1/models', {
-          headers: { 'Authorization': `Bearer ${apiKey}` }
-        });
+        response = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${apiKey}` } });
         break;
       case 'gemini':
         response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
         break;
       case 'mistral':
-        response = await fetch('https://api.mistral.ai/v1/models', {
-          headers: { 'Authorization': `Bearer ${apiKey}` }
-        });
+        response = await fetch('https://api.mistral.ai/v1/models', { headers: { Authorization: `Bearer ${apiKey}` } });
         break;
       case 'kilo':
-        response = await fetch('https://api.kilo.ai/api/gateway/models', {
-          headers: { 'Authorization': `Bearer ${apiKey}` }
-        });
+        response = await fetch('https://api.kilo.ai/api/gateway/models', { headers: { Authorization: `Bearer ${apiKey}` } });
         break;
       default:
-        throw new Error(`Unknown provider: ${provider}`);
+        throw new Error('Unknown provider');
     }
+
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     return this.extractModelIds(data).filter((id) => this.isChatModel(provider, id));
   }
 
-  // Normalize the two common models-list shapes:
-  //   OpenAI/Mistral/Kilo: { data: [{ id, ... }] }
-  //   Gemini:              { models: [{ name: "models/gemini-...", ... }] }
   extractModelIds(data) {
-    if (!data) return [];
-    const list = Array.isArray(data) ? data : (data.data || data.models || []);
+    const list = Array.isArray(data) ? data : (data?.data || data?.models || []);
     return list
-      .map((m) => m.id || (m.name || '').replace(/^models\//, ''))
+      .map((model) => model.id || (model.name || '').replace(/^models\//, ''))
       .filter(Boolean);
   }
 
-  // Drop obviously non-chat model families from the dropdown
   isChatModel(provider, id) {
-    if (/embedding|whisper|tts|dall-e|moderation|realtime|audio|image|video|transcription|speech|imagen|aqa|bison|rerank/i.test(id)) {
-      return false;
-    }
-    if (provider === 'gemini') return /^(gemini|gemma)/.test(id);
-    return true;
-  }
-
-  updateApiKeyField() {
-    const apiKey = this.settings.apiKeys[this.settings.provider] || '';
-    const apiKeyInput = document.getElementById('apiKey');
-    if (apiKeyInput) apiKeyInput.value = apiKey;
-  }
-
-  async resetSettings() {
-    if (!confirm('Are you sure you want to reset all settings to defaults? This will not delete your API keys.')) {
-      return;
-    }
-
-    // Reset to default settings but preserve API keys
-    const apiKeys = this.settings.apiKeys;
-    this.settings = {
-      provider: 'openai',
-      model: '',
-      contextEnabled: true,
-      memoryEnabled: true,
-      contextMode: 'intelligent',
-      maxTokens: 1500,
-      theme: 'light',
-      nlpEnabled: true,
-      sentimentAnalysis: true,
-      intentClassification: true,
-      conversationInsights: true,
-      animationsEnabled: true,
-      notificationsEnabled: true,
-      apiKeys: apiKeys
-    };
-
-    try {
-      await chrome.storage.local.set({ webSageSettings: this.settings });
-      this.setupUI();
-      this.showStatus('Settings reset to defaults!', 'success');
-    } catch (error) {
-      this.showStatus('Failed to reset settings: ' + error.message, 'error');
-    }
+    if (/embedding|whisper|tts|dall-e|moderation|realtime|audio|image|video|transcription|speech|imagen|aqa|bison|rerank/i.test(id)) return false;
+    return provider !== 'gemini' || /^(gemini|gemma)/.test(id);
   }
 
   async saveSettings() {
-    // Collect form data with null checks
-    const provider = document.getElementById('provider');
-    if (provider) this.settings.provider = provider.value;
-    
-    const model = document.getElementById('model');
-    // Skip when the dropdown only holds a placeholder (no key / load failed)
-    if (model && model.value) this.settings.model = model.value;
-    
-    const contextEnabled = document.getElementById('contextEnabled');
-    if (contextEnabled) this.settings.contextEnabled = contextEnabled.checked;
-    
-    const memoryEnabled = document.getElementById('memoryEnabled');
-    if (memoryEnabled) this.settings.memoryEnabled = memoryEnabled.checked;
-    
-    const contextMode = document.getElementById('contextMode');
-    if (contextMode) this.settings.contextMode = contextMode.value;
-    
-    // Validate and save maxTokens
-    const maxTokensEl = document.getElementById('maxTokens');
-    if (maxTokensEl) {
-      const tokens = parseInt(maxTokensEl.value);
-      if (isNaN(tokens) || tokens < 0) {
-        this.showStatus('Invalid max tokens value', 'error');
-        return;
-      }
-      this.settings.maxTokens = tokens;
-    }
-    
-    const theme = document.getElementById('theme');
-    if (theme) this.settings.theme = theme.value;
-    
-    // Collect NLP settings
-    const nlpEnabled = document.getElementById('nlpEnabled');
-    if (nlpEnabled) this.settings.nlpEnabled = nlpEnabled.checked;
-    
-    const sentimentAnalysis = document.getElementById('sentimentAnalysis');
-    if (sentimentAnalysis) this.settings.sentimentAnalysis = sentimentAnalysis.checked;
-    
-    const intentClassification = document.getElementById('intentClassification');
-    if (intentClassification) this.settings.intentClassification = intentClassification.checked;
-    
-    const conversationInsights = document.getElementById('conversationInsights');
-    if (conversationInsights) this.settings.conversationInsights = conversationInsights.checked;
-    
-    // Collect UI settings
-    const animationsEnabled = document.getElementById('animationsEnabled');
-    if (animationsEnabled) this.settings.animationsEnabled = animationsEnabled.checked;
-    
-    const notificationsEnabled = document.getElementById('notificationsEnabled');
-    if (notificationsEnabled) this.settings.notificationsEnabled = notificationsEnabled.checked;
-    
-    // Save API key for current provider
-    const apiKeyInput = document.getElementById('apiKey');
-    if (apiKeyInput) {
-      const apiKey = apiKeyInput.value.trim();
-      if (apiKey) {
-        this.settings.apiKeys[this.settings.provider] = apiKey;
-      }
-    }
-
+    const saveButton = document.getElementById('saveSettings');
     try {
+      this.collectSettingsFromForm();
+      this.setButtonBusy(saveButton, true, 'Saving…');
       await chrome.storage.local.set({ webSageSettings: this.settings });
-      this.showStatus('Settings saved successfully!', 'success');
+      this.showStatus('Settings saved. WebSage is ready when you are.', 'success');
+      this.updateConnectionState();
     } catch (error) {
-      this.showStatus('Failed to save settings: ' + error.message, 'error');
+      this.showStatus(error.message || 'WebSage could not save your settings.', 'error');
+    } finally {
+      this.setButtonBusy(saveButton, false);
     }
   }
 
   async testConnection() {
-    const apiKeyInput = document.getElementById('apiKey');
-    if (!apiKeyInput) {
-      this.showStatus('API key input not found', 'error');
-      return;
-    }
-    
-    const apiKey = apiKeyInput.value.trim();
-    const provider = this.settings.provider;
+    const apiKey = this.getFormApiKey();
+    const provider = this.getFormProvider();
+    const testButton = document.getElementById('testConnection');
 
     if (!apiKey) {
-      this.showStatus('Please enter an API key first', 'error');
+      this.showStatus('Add an API key before testing the connection.', 'error');
+      document.getElementById('apiKey')?.focus();
       return;
     }
 
-    this.showStatus('Testing connection...', 'info');
+    this.setButtonBusy(testButton, true, 'Testing…');
+    this.showStatus(`Testing ${this.getProviderLabel(provider)}…`, 'info');
+    this.setConnectionState('testing', 'Testing connection');
 
     try {
-      let isValid = false;
-      
-      switch (provider) {
-        case 'openai':
-          isValid = await this.testOpenAI(apiKey);
-          break;
-        case 'gemini':
-          isValid = await this.testGemini(apiKey);
-          break;
-        case 'mistral':
-          isValid = await this.testMistral(apiKey);
-          break;
-        case 'kilo':
-          isValid = await this.testKilo(apiKey);
-          break;
-      }
-
-      if (isValid) {
-        this.showStatus('Connection successful!', 'success');
-      } else {
-        this.showStatus('Connection failed. Please check your API key.', 'error');
-      }
+      const isValid = await this.testProvider(provider, apiKey);
+      if (!isValid) throw new Error('The provider rejected this API key.');
+      this.showStatus(`Connected to ${this.getProviderLabel(provider)}. Save settings to keep this key.`, 'success');
+      this.setConnectionState('connected', `${this.getProviderLabel(provider)} connected`);
     } catch (error) {
-      this.showStatus('Connection test failed: ' + error.message, 'error');
+      this.showStatus(this.getRequestError('Connection failed', error), 'error');
+      this.setConnectionState('error', 'Connection failed');
+    } finally {
+      this.setButtonBusy(testButton, false);
     }
   }
 
-  async testOpenAI(apiKey) {
-    const response = await fetch('https://api.openai.com/v1/models', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
-    });
-    return response.ok;
+  async testProvider(provider, apiKey) {
+    switch (provider) {
+      case 'openai': return (await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${apiKey}` } })).ok;
+      case 'gemini': return (await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`)).ok;
+      case 'mistral': return (await fetch('https://api.mistral.ai/v1/models', { headers: { Authorization: `Bearer ${apiKey}` } })).ok;
+      case 'kilo': return (await fetch('https://api.kilo.ai/api/gateway/models', { headers: { Authorization: `Bearer ${apiKey}` } })).ok;
+      default: throw new Error('Unknown provider');
+    }
   }
 
-  async testGemini(apiKey) {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-    return response.ok;
+  openResetDialog() {
+    const dialog = document.getElementById('resetDialog');
+    if (dialog && !dialog.open) dialog.showModal();
   }
 
-  async testMistral(apiKey) {
-    const response = await fetch('https://api.mistral.ai/v1/models', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
-    });
-    return response.ok;
+  async resetSettings() {
+    const resetButton = document.getElementById('confirmReset');
+    try {
+      this.setButtonBusy(resetButton, true, 'Resetting…');
+      this.settings = { ...DEFAULT_SETTINGS, apiKeys: { ...this.settings.apiKeys } };
+      await chrome.storage.local.set({ webSageSettings: this.settings });
+      document.getElementById('resetDialog')?.close();
+      this.setupUI();
+      this.showStatus('Settings reset. Your API keys were kept.', 'success');
+    } catch (error) {
+      this.showStatus('WebSage could not reset your settings.', 'error');
+    } finally {
+      this.setButtonBusy(resetButton, false);
+    }
   }
 
-  async testKilo(apiKey) {
-    const response = await fetch('https://api.kilo.ai/api/gateway/models', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
-    });
-    return response.ok;
+  setButtonBusy(button, isBusy, busyLabel = '') {
+    if (!button) return;
+    if (isBusy) {
+      button.dataset.idleLabel = button.textContent.trim();
+      button.disabled = true;
+      button.replaceChildren();
+      const spinner = document.createElement('span');
+      spinner.className = 'button-spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      button.append(spinner, document.createTextNode(busyLabel));
+      return;
+    }
+
+    button.disabled = false;
+    button.textContent = button.dataset.idleLabel || button.textContent;
+  }
+
+  getProviderLabel(provider = this.getFormProvider()) {
+    return { openai: 'OpenAI', gemini: 'Google Gemini', mistral: 'Mistral AI', kilo: 'Kilo AI' }[provider] || 'Provider';
+  }
+
+  getRequestError(prefix, error) {
+    if (error?.message?.startsWith('HTTP ')) return `${prefix}: ${error.message}. Check the API key and try again.`;
+    return `${prefix}. Check your connection and API key, then try again.`;
+  }
+
+  updateConnectionState() {
+    const apiKey = this.getFormApiKey();
+    this.setConnectionState(apiKey ? '' : 'idle', apiKey ? `${this.getProviderLabel()} ready to test` : 'Setup required');
+  }
+
+  setConnectionState(state, text) {
+    const connectionState = document.getElementById('connectionState');
+    if (!connectionState) return;
+    connectionState.className = `connection-state${state ? ` ${state}` : ''}`;
+    connectionState.textContent = text;
   }
 
   showStatus(message, type) {
-    const statusDiv = document.getElementById('status');
-    if (!statusDiv) return;
-    
-    statusDiv.textContent = message;
-    statusDiv.className = `status ${type}`;
-    statusDiv.style.display = 'block';
+    const status = document.getElementById('status');
+    if (!status) return;
 
-    // Hide after 3 seconds for success messages
+    clearTimeout(this.statusTimer);
+    status.textContent = message;
+    status.className = `status ${type}`;
+    status.setAttribute('aria-hidden', 'false');
+
     if (type === 'success') {
-      setTimeout(() => {
-        statusDiv.style.display = 'none';
-      }, 3000);
+      this.statusTimer = window.setTimeout(() => status.setAttribute('aria-hidden', 'true'), 5000);
     }
   }
 }
 
-// Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   new WebSagePopup();
 });

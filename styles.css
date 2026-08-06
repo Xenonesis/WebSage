@@ -16,7 +16,7 @@
   overflow: hidden;
   min-width: 320px;
   min-height: 450px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -90,7 +90,7 @@
   border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   border: none;
   outline: none;
   font-weight: 500;
@@ -130,7 +130,7 @@
   border-radius: 4px;
   font-size: 14px;
   color: #171717;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
 }
 
 .websage-btn-icon:hover {
@@ -220,7 +220,7 @@
   font-size: 14px;
   padding: 6px;
   border-radius: 6px;
-  transition: all 0.2s;
+  transition: background-color 0.2s, opacity 0.2s, transform 0.2s;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -289,7 +289,7 @@
   font-size: 14px;
   line-height: 1.5;
   max-height: 120px;
-  transition: all 0.3s;
+  transition: background-color 0.3s, box-shadow 0.3s;
   background: transparent !important;
   border: none !important;
 }
@@ -320,7 +320,7 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  transition: all 0.2s;
+  transition: color 0.2s, opacity 0.2s;
 }
 
 #websage-chat-window.dark .websage-btn-send {
@@ -342,7 +342,7 @@
   font-size: 12px;
   text-align: center;
   min-height: 20px;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   font-weight: 500;
   letter-spacing: 0.3px;
 }
@@ -402,7 +402,7 @@
   padding: 4px 8px;
   border-radius: 12px;
   opacity: 0;
-  transition: all 0.3s;
+  transition: opacity 0.3s, background-color 0.3s, color 0.3s;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   font-weight: 500;
@@ -488,7 +488,7 @@
   border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   max-height: 350px;
   overflow-y: auto;
-  transition: all 0.3s ease;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
 #websage-chat-window.dark .websage-analysis {
@@ -533,7 +533,7 @@
   opacity: 0.7;
   padding: 6px;
   border-radius: 8px;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -565,7 +565,7 @@
   border-radius: 12px;
   padding: 16px;
   text-align: center;
-  transition: all 0.3s;
+  transition: background-color 0.3s, color 0.3s, transform 0.3s;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -638,7 +638,7 @@
   border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -766,7 +766,7 @@
   display: inline-block;
   min-width: 180px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .websage-credibility-main:hover {
@@ -945,7 +945,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 2147483646;
 }
 
@@ -1014,4 +1014,37 @@
 .dark .glass {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Shared accessibility helpers for the injected chat surface. */
+.websage-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+#websage-chat-window :where(button, select, textarea):focus-visible {
+  outline: 3px solid #2f7d5c !important;
+  outline-offset: 2px;
+}
+
+#websage-chat-window :where(button, select, textarea) {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #websage-chat-window *,
+  #websage-chat-window *::before,
+  #websage-chat-window *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
