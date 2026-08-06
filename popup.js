@@ -2,6 +2,8 @@
 class WebSagePopup {
   constructor() {
     this.settings = {};
+    this._modelsToken = 0;
+    this._modelsDebounce = null;
     this.init();
   }
 
@@ -80,8 +82,8 @@ class WebSagePopup {
     const apiKeyInput = document.getElementById('apiKey');
     if (apiKeyInput) apiKeyInput.value = apiKey;
     
-    // Update model options based on provider
-    this.updateModelOptions();
+    // Fetch model options live from the provider using the API key
+    this.loadModels();
   }
 
   setupEventListeners() {
@@ -90,8 +92,8 @@ class WebSagePopup {
     if (provider) {
       provider.addEventListener('change', (e) => {
         this.settings.provider = e.target.value;
-        this.updateModelOptions();
         this.updateApiKeyField();
+        this.loadModels();
       });
     }
 
@@ -111,6 +113,15 @@ class WebSagePopup {
             toggleBtn.textContent = '👁️';
           }
         }
+      });
+    }
+
+    // Reload the model list live as the user types/edits the API key
+    const apiKeyInput = document.getElementById('apiKey');
+    if (apiKeyInput) {
+      apiKeyInput.addEventListener('input', () => {
+        clearTimeout(this._modelsDebounce);
+        this._modelsDebounce = setTimeout(() => this.loadModels(), 400);
       });
     }
 
@@ -147,62 +158,102 @@ class WebSagePopup {
     }
   }
 
-  updateModelOptions() {
+  async loadModels() {
     const modelSelect = document.getElementById('model');
     if (!modelSelect) return;
-    
+
     const provider = this.settings.provider;
-    
-    // Clear existing options
-    modelSelect.innerHTML = '';
-    
-    let models = [];
+    const apiKeyInput = document.getElementById('apiKey');
+    // Prefer the key currently in the field (may be freshly typed, not yet saved)
+    const apiKey = (apiKeyInput && apiKeyInput.value.trim()) || this.settings.apiKeys[provider] || '';
+    const storedModel = this.settings.model;
+    const token = ++this._modelsToken;
+
+    const setPlaceholder = (text) => {
+      modelSelect.innerHTML = '';
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = text;
+      modelSelect.appendChild(option);
+    };
+
+    if (!apiKey) {
+      setPlaceholder('Enter API key to load models');
+      return;
+    }
+
+    setPlaceholder('Loading models...');
+    try {
+      const models = await this.fetchModels(provider, apiKey);
+      if (token !== this._modelsToken) return; // superseded by a newer request
+
+      modelSelect.innerHTML = '';
+      if (models.length === 0) {
+        setPlaceholder('No models available for this key');
+        return;
+      }
+      models.forEach((id) => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = id;
+        modelSelect.appendChild(option);
+      });
+      // Keep the stored model when still offered, else default to the first
+      modelSelect.value = models.includes(storedModel) ? storedModel : models[0];
+    } catch (error) {
+      if (token !== this._modelsToken) return;
+      setPlaceholder('Failed to load models');
+      this.showStatus(`Failed to load models: ${error.message}`, 'error');
+    }
+  }
+
+  async fetchModels(provider, apiKey) {
+    let response;
     switch (provider) {
       case 'openai':
-        models = [
-          { value: 'gpt-5.6-sol', text: 'GPT-5.6 Sol (Best)' },
-          { value: 'gpt-5.5', text: 'GPT-5.5' },
-          { value: 'gpt-5.4-mini', text: 'GPT-5.4 mini' },
-          { value: 'gpt-5.4-nano', text: 'GPT-5.4 nano' }
-        ];
+        response = await fetch('https://api.openai.com/v1/models', {
+          headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
         break;
       case 'gemini':
-        models = [
-          { value: 'gemini-3.6-flash', text: 'Gemini 3.6 Flash (Best)' },
-          { value: 'gemini-3.5-flash', text: 'Gemini 3.5 Flash' },
-          { value: 'gemini-3.5-flash-lite', text: 'Gemini 3.5 Flash-Lite' },
-          { value: 'gemini-3.1-flash-lite', text: 'Gemini 3.1 Flash-Lite' },
-          { value: 'gemini-2.5-pro', text: 'Gemini 2.5 Pro' }
-        ];
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
         break;
       case 'mistral':
-        models = [
-          { value: 'mistral-medium-latest', text: 'Mistral Medium 3.5 (Best)' },
-          { value: 'mistral-large-latest', text: 'Mistral Large 3' },
-          { value: 'mistral-small-latest', text: 'Mistral Small 4' }
-        ];
+        response = await fetch('https://api.mistral.ai/v1/models', {
+          headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
         break;
       case 'kilo':
-        models = [
-          { value: 'anthropic/claude-sonnet-4.5', text: 'Claude Sonnet 4.5 (Best)' },
-          { value: 'x-ai/grok-code-fast-1:free', text: 'Grok Code Fast (Free)' },
-          { value: 'nvidia/nemotron-3-ultra-550b-a55b:free', text: 'Nemotron 3 Ultra (Free)' },
-          { value: 'minimax/minimax-m2.5:free', text: 'MiniMax M2.5 (Free)' },
-          { value: 'arcee-ai/trinity-large-thinking:free', text: 'Trinity Large Thinking (Free)' },
-          { value: 'bytedance-seed/dola-seed-2.0-pro:free', text: 'DOLA Seed 2.0 Pro (Free)' }
-        ];
+        response = await fetch('https://api.kilo.ai/api/gateway/models', {
+          headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
         break;
+      default:
+        throw new Error(`Unknown provider: ${provider}`);
     }
-    
-    models.forEach(model => {
-      const option = document.createElement('option');
-      option.value = model.value;
-      option.textContent = model.text;
-      modelSelect.appendChild(option);
-    });
-    
-    // Set current model if valid for this provider, else default to first option
-    modelSelect.value = models.some(m => m.value === this.settings.model) ? this.settings.model : models[0].value;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return this.extractModelIds(data).filter((id) => this.isChatModel(provider, id));
+  }
+
+  // Normalize the two common models-list shapes:
+  //   OpenAI/Mistral/Kilo: { data: [{ id, ... }] }
+  //   Gemini:              { models: [{ name: "models/gemini-...", ... }] }
+  extractModelIds(data) {
+    if (!data) return [];
+    const list = Array.isArray(data) ? data : (data.data || data.models || []);
+    return list
+      .map((m) => m.id || (m.name || '').replace(/^models\//, ''))
+      .filter(Boolean);
+  }
+
+  // Drop obviously non-chat model families from the dropdown
+  isChatModel(provider, id) {
+    if (/embedding|whisper|tts|dall-e|moderation|realtime|audio|image|video|transcription|speech|imagen|aqa|bison|rerank/i.test(id)) {
+      return false;
+    }
+    if (provider === 'gemini') return /^(gemini|gemma)/.test(id);
+    return true;
   }
 
   updateApiKeyField() {
@@ -220,7 +271,7 @@ class WebSagePopup {
     const apiKeys = this.settings.apiKeys;
     this.settings = {
       provider: 'openai',
-      model: 'gpt-5.6-sol',
+      model: '',
       contextEnabled: true,
       memoryEnabled: true,
       contextMode: 'intelligent',
@@ -250,7 +301,8 @@ class WebSagePopup {
     if (provider) this.settings.provider = provider.value;
     
     const model = document.getElementById('model');
-    if (model) this.settings.model = model.value;
+    // Skip when the dropdown only holds a placeholder (no key / load failed)
+    if (model && model.value) this.settings.model = model.value;
     
     const contextEnabled = document.getElementById('contextEnabled');
     if (contextEnabled) this.settings.contextEnabled = contextEnabled.checked;

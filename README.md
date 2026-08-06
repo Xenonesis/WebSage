@@ -122,6 +122,8 @@ Right-click any text or page for instant AI actions:
 
 ### 🤖 **AI Provider Ecosystem**
 
+> The **Model** dropdown in WebSage settings is fetched live from your provider using your API key — the list below is indicative of what each provider typically offers.
+
 <table>
 <tr>
 <td align="center" width="25%">
